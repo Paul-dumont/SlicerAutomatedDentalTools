@@ -160,7 +160,6 @@ class SegmentationWidget(qt.QWidget):
         exportLayout.addRow("Export VTK",           self.vtkCheckBox)
         exportLayout.addRow("Export VTK (merged)",  self.vtkmergedCheckBox)
         exportLayout.addRow("glTF reduction factor:", self.reductionFactorSlider)
-        # exportLayout.addRow(createButton("Export", callback=self.onExportClicked, parent=exportWidget))
 
         # ↳ on insère le widget d’export sous les dossiers
         inputLayout.addRow("Export formats :", exportWidget)
@@ -588,7 +587,6 @@ class SegmentationWidget(qt.QWidget):
             self.onProgressInfo(f"❌ Failed to save segmentation in {output_path}")
 
         # ► Nettoyage du label-map
-        # labelmapVolumeNode.RemoveAllDisplayNodes()
         slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
 
 
@@ -1217,7 +1215,6 @@ class SegmentationWidget(qt.QWidget):
             self.segmentationNodeSelector.setCurrentNode(segmentationNode)
         slicer.app.processEvents()
         self._updateSegmentationDisplay()
-        # self._postProcessSegments()
         self._storeProcessedSegmentation()
 
     # ─── Helper to copy segmentation results ──────────────────────────────────
@@ -1484,9 +1481,6 @@ class SegmentationWidget(qt.QWidget):
 
     def _postProcessSegments(self):
         self.onProgressInfo("Post processing results...")
-        # self._keepLargestIsland("Segment_1")
-        # self._removeSmallIsland("Segment_3")
-        # self._removeSmallIsland("Segment_4")
         self.onProgressInfo("Post processing done.")
 
     def _keepLargestIsland(self, segmentId):

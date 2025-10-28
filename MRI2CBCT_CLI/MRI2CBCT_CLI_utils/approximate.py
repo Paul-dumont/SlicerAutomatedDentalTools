@@ -79,8 +79,6 @@ def approximation(cbct_folder, mri_folder, output_folder):
                 best_transform = None
                 
                 for params in param_sampler:
-                    # print(f"\n\033[1mUsing {device.upper()} -- Registering MRI: {mri_path} to CBCT: {cbct_path}")
-                    # print(f"Testing parameters: {params}\033[0m")
 
                     nmi_loss_function = NMI(intensity_range=None, nbins=32, sigma=params['sigma'], use_mask=False)
                     reg = AffineRegistration(scales=(4, 2), iterations=(500, 100), is_3d=True, 

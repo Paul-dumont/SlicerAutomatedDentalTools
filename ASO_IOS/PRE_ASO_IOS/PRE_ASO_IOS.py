@@ -10,10 +10,6 @@ import numpy as np
 from tqdm import tqdm
 from itertools import chain
 
-# from pytorch3d.loss import chamfer_distance
-# from torch import float32, tensor
-# import torch
-
 
 fpath = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(fpath)
@@ -56,8 +52,6 @@ def main(args):
     print("icp meanteeth launch")
 
     list_extension = [".vtk", ".stl", ".off", ".obj", ".vtp"]
-
-    # device = torch.device('cuda')
 
     lower = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32]
     dic_teeth = {"Upper": [], "Lower": []}
@@ -196,8 +190,6 @@ def main(args):
             os.path.basename(file_vtk),
             args.add_inname[0],
         )
-        # matrix_final = np.matmul(output_icp['matrix'],matrix)
-        # np.save(os.path.join(args.output_folder[0] ,f'matrix_{file["name"]}.npy'), matrix_final)
 
         if link:
             surf_lower = ReadSurf(file[jaw.inv()])

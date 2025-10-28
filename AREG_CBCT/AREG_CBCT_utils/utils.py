@@ -14,22 +14,10 @@ from glob import iglob
 import os, json
 import SimpleITK as sitk
 
-# from slicer.util import pip_install, pip_uninstall
 
 from pkg_resources import working_set
 import dicom2nifti
 import itk
-# if "itk-elastix" in [f"{i.key}" for i in working_set]:
-#     import itk
-# else:
-#     pip_install("itk-elastix -q")
-#     import itk
-
-# try:
-#     import dicom2nifti
-# except ImportError:
-#     pip_install("dicom2nifti -q")
-#     import dicom2nifti
 
 """
 8888888888 8888888 888      8888888888  .d8888b.
@@ -418,7 +406,6 @@ def ResampleImage(image, transform):
 def applyMask(image, mask, label):
     """Apply a mask to an image."""
     # Cast the image to float32
-    # image = sitk.Cast(image, sitk.sitkFloat32)
     array = sitk.GetArrayFromImage(mask)
     if label is not None and label in np.unique(array):
         array = np.where(array == label, 1, 0)

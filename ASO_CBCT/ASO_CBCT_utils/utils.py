@@ -666,9 +666,6 @@ def InitICP(source, target, Print=False, BestLMList=None, search=False):
     TransformList.append(Translationsitk)
     # ============ Apply Translation Transform ==============
     source = ApplyTranslation(source, T)
-    # source = ApplyTransform(source, TranslationTransformMatrix)
-
-    # print("Mean Distance:{:.2f}".format(ComputeMeanDistance(source, target)))
 
     # ============ Pick Another Random Landmark ==============
     if BestLMList is None:
@@ -685,22 +682,14 @@ def InitICP(source, target, Print=False, BestLMList=None, search=False):
     v2 = abs(target[secondpick] - target[firstpick])
     angle, axis = AngleAndAxisVectors(v2, v1)
 
-    # print("Angle: {:.4f}".format(angle))
-    # print("Angle: {:.2f}°".format(angle*180/np.pi))
-
     # ============ Compute Rotation Transform ==============
     R = RotationMatrix(axis, angle)
-    # TransformMatrix[:3, :3] = R
     RotationTransformMatrix[:3, :3] = R
     Rotationsitk = sitk.VersorRigid3DTransform()
     Rotationsitk.SetMatrix(R.flatten().tolist())
     TransformList.append(Rotationsitk)
     # ============ Apply Rotation Transform ==============
-    # source = ApplyRotation(source,R)
     source = ApplyTransform(source, RotationTransformMatrix)
-
-    # print("Mean Distance:{:.2f}".format(ComputeMeanDistance(source, target)))
-    # print("Rotation:\n{}".format(R))
 
     # ============ Compute Transform Matrix (Rotation + Translation) ==============
     TransformMatrix = RotationTransformMatrix  # @ TranslationTransformMatrix
@@ -709,7 +698,6 @@ def InitICP(source, target, Print=False, BestLMList=None, search=False):
     if BestLMList is None:
         while True:
             thirdpick = labels[np.random.randint(0, len(labels))]
-            # thirdpick = 'Ba'
             if thirdpick != firstpick and thirdpick != secondpick:
                 break
     if Print:
@@ -719,7 +707,6 @@ def InitICP(source, target, Print=False, BestLMList=None, search=False):
     v1 = abs(source[thirdpick] - source[firstpick])
     v2 = abs(target[thirdpick] - target[firstpick])
     angle, axis = AngleAndAxisVectors(v2, v1)
-    # print("Angle: {:.4f}".format(angle))
 
     # ============ Compute Rotation Transform ==============
     RotationTransformMatrix = np.eye(4)
@@ -729,7 +716,6 @@ def InitICP(source, target, Print=False, BestLMList=None, search=False):
     Rotationsitk.SetMatrix(R.flatten().tolist())
     TransformList.append(Rotationsitk)
     # ============ Apply Rotation Transform ==============
-    # source = ApplyRotation(source,R)
     source = ApplyTransform(source, RotationTransformMatrix)
 
     # ============ Compute Transform Matrix (Init ICP) ==============
@@ -738,7 +724,6 @@ def InitICP(source, target, Print=False, BestLMList=None, search=False):
     if Print:
         print("Mean Distance:{:.2f}".format(ComputeMeanDistance(source, target)))
 
-    # return source
     if search:
         return firstpick, secondpick, thirdpick, ComputeMeanDistance(source, target)
 
@@ -762,9 +747,7 @@ def ICP(input_file, input_json_file, gold_file, gold_json_file, list_landmark, i
     # Read input files
     input_image = sitk.ReadImage(input_file)
     input_transform = sitk.ReadTransform(input_transform_file)
-    # print('input spacing:',input_image.GetSpacing())
     gold_image = sitk.ReadImage(gold_file)
-    # print('gold spacing:',gold_image.GetSpacing())
     source = LoadJsonLandmarks(input_json_file, list_landmark)
     nb_lmrk = len(source.keys())
 
@@ -817,7 +800,6 @@ def ICP(input_file, input_json_file, gold_file, gold_json_file, list_landmark, i
     TransformSITK = TransformSITK.GetInverse()
 
     TransformMatrixFinal = TransformMatrixBis @ TransformMatrix
-    # print(TransformMatrixFinal)
 
     # Apply the final transform matrix
     source_transformed = ApplyTransform(source_orig, TransformMatrixFinal)
@@ -918,11 +900,6 @@ def ApplyTransform(source, transform):
     source : dict
         Dictionary of transformed landmarks
     """
-    # Translation = transform[:3,3]
-    # Rotation = transform[:3,:3]
-    # for key in source.keys():
-    #     source[key] = Rotation @ source[key] + Translation
-    # return source
 
     sourcee = source.copy()
     for key in sourcee.keys():

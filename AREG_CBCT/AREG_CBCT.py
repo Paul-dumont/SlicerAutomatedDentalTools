@@ -81,9 +81,6 @@ def main(args):
 
         sitk.WriteTransform(transform, TransOutPath)
         sitk.WriteImage(resample_t2, ScanOutPath)
-        # if args.reg_lm:
-        #     transformedLandmarks = applyTransformLandmarks(LoadOnlyLandmarks(data['lmT2']), transform.GetInverse())
-        #     WriteJson(transformedLandmarks, os.path.join(outpath,patient+'_lm_'+add_name+'.mrk.json'))
 
         print(f"""<filter-progress>{0}</filter-progress>""")
         sys.stdout.flush()
@@ -110,7 +107,6 @@ if __name__ == "__main__":
     parser.add_argument("temp_folder", nargs=1)
     parser.add_argument("ApproxReg", nargs=1)
     parser.add_argument("mask_folder_t1", nargs=1)
-    # parser.add_argument('reg_lm',nargs=1)
 
     args = parser.parse_args()
 

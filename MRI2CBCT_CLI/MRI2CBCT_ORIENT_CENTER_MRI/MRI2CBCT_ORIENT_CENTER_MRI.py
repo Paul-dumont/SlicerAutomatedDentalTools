@@ -36,8 +36,6 @@ def calculate_new_origin(image):
     # Calculate the center offset for each axis
     new_origin = [(size[i] * spacing[i]) / 2 for i in range(len(size))]
     new_origin = [new_origin[2],-new_origin[0],new_origin[1]] # FOR MRI
-    # new_origin = [-new_origin[0]*1.5,new_origin[1],-new_origin[2]*0.5] # FOR CBCT
-    # new_origin = [-new_origin[0]*1,new_origin[1],-new_origin[2]*1] # SAVE INSIDE BUT NOT CENTER
     return tuple(new_origin)
 
 def modify_image_properties(nifti_file_path, new_direction, output_file_path=None, acquisition_z_spacing=3.0):
@@ -110,7 +108,5 @@ if __name__ == "__main__":
 
 # USE THIS DIRECTION FOR MRI : "0.0, 0.0, -1.0, 1.0, 0.0, 0.0, 0.0, -1.0, 0.0"
 # FOR CBCT : "1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0"
-
-
 
 #  "-1.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 1.0"

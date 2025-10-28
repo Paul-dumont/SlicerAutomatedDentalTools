@@ -40,7 +40,6 @@ def GetPatients(folder_path, time_point="T1", segmentationType=None):
             patients[patient] = {}
 
         if True in [i in basename for i in file_extension]:
-            # if segmentationType+'MASK' in basename:
             if True in [i in basename.lower() for i in ["mask", "seg", "pred"]]:
                 if segmentationType is None:
                     patients[patient]["seg" + time_point] = file

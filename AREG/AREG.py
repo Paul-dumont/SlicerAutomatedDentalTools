@@ -87,9 +87,6 @@ def install_function(self,list_libs:list):
             self.ui.label_LibsInstallation.setVisible(True)
             try:
                 for lib, version_constraint in libs_to_install + libs_to_update:
-                    # if lib == "pytorch3d":
-                    #     install_pytorch3d()
-                    #     continue
                     if not version_constraint:
                         pip_install(lib)
 
@@ -199,10 +196,6 @@ class AREG(ScriptedLoadableModule):
             # This node name will be used when the data set is loaded
             nodeNames="AREG2",
         )
-
-        # self.ui.ButtonSearchModel2.clicked.connect(
-        #     lambda: self.SearchModel(self.ui.lineEditModel2)
-        # )
 
 
 class PopUpWindow(qt.QDialog):
@@ -442,14 +435,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         )
 
         self.HideComputeItems()
-        # self.initTest(self.MethodDic['Semi_IOS'])
-
-        # self.dicchckbox=self.ActualMeth.getcheckbox()
-        # self.dicchckbox2=self.ActualMeth.getcheckbox2()
-
-        # self.enableCheckbox()
-
-        # self.SwitchMode(0)
         self.SwitchType()
         
         self.ui.label_11.setVisible(False)
@@ -538,14 +523,9 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if index == 2:  # Semi-Automated
             self.ui.label_6.setVisible(False)
-            # self.ui.label_7.setVisible(False)
             self.ui.lineEditModel2.setVisible(False)
             self.ui.lineEditModel2.setText(" ")
-            # self.ui.lineEditModel1.setVisible(False)
-            # self.ui.lineEditModel1.setText(" ")
             self.ui.ButtonSearchModel2.setVisible(False)
-            # self.ui.ButtonSearchModel1.setVisible(False)
-            # self.ui.advancedCollapsibleButton.setMaximumHeight(350)
             self.ui.label_4.setVisible(False)
             self.ui.lineEditModel3.setVisible(False)
             self.ui.ButtonSearchModel3.setVisible(False)
@@ -556,10 +536,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.ButtonSearchT1Mask.setVisible(True)
 
         if index == 1:  # Fully Automated
-            # self.ui.label_6.setVisible(True)
-            # self.ui.label_7.setVisible(True)
-            # self.ui.lineEditModel1.setVisible(True)
-            # self.ui.ButtonSearchModel1.setVisible(True)
             self.ui.lineEditModel2.setVisible(False)
             self.ui.ButtonSearchModel2.setVisible(False)
             self.ui.label_6.setVisible(False)
@@ -570,7 +546,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if index == 0:  #  Orientation & Fully Auto Reg
             if self.type == "CBCT":
-                # self.ui.advancedCollapsibleButton.setMaximumHeight(10000)
                 self.ui.label_6.setVisible(True)
                 self.ui.lineEditModel2.setVisible(True)
                 self.ui.ButtonSearchModel2.setVisible(True)
@@ -719,7 +694,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         out_path = os.path.join(directory, folder_name)
 
         if not os.path.exists(out_path):
-            # print("Downloading {}...".format(folder_name.split(os.sep)[0]))
             os.makedirs(out_path)
 
             temp_path = os.path.join(directory, "temp.zip")
@@ -743,7 +717,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 progress.setWindowTitle(
                     "Downloading {}...".format(folder_name.split(os.sep)[0])
                 )
-                # progress.setWindowFlags(qt.Qt.WindowStaysOnTopHint)
                 progress.show()
                 length = response.info().get("Content-Length")
                 if length:
@@ -960,7 +933,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             ret = correspondance[reference_type]
 
         name, url = self.ActualMeth.getALIModelList()
-        # dirr = self.SlicerDownloadPath.replace("AREG", "ASO")
         for i, model in enumerate(ret):
             _ = self.DownloadUnzip(
                 url=os.path.join(url, "{}.zip".format(model)),
@@ -1077,7 +1049,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             OrientReference=self.CBCTOrientRef,
         )
 
-        # print('error',error)
         if isinstance(error, str):
             qt.QMessageBox.warning(self.parent, "Warning", error.replace(",", "\n"))
 
@@ -1148,7 +1119,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.label_LibsInstallation.setHidden(True)
         self.startTime = time.time()
 
-        # self.ui.progressBar.setMaximum(self.nb_patient)
         self.ui.progressBar.setValue(0)
 
         self.ui.LabelProgressPatient.setText(f"Patient : 0 / {self.nb_patient}")
@@ -1200,7 +1170,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.progressBar.setFormat(f"{progress_bar_value:.2f}%")
 
     def onProcessUpdate(self, caller, event):
-        # timer = f"Time : {time.time()-self.startTime:.2f}s"
         currentTime = time.time() - self.startTime
         if currentTime < 60:
             timer = f"Time : {int(currentTime)}s"
@@ -1211,9 +1180,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self.ui.LabelTimer.setText(timer)
         progress = caller.GetProgress()
-        # self.module_name = caller.GetModuleTitle() if self.module_name_bis is None else self.module_name_bis
         self.ui.LabelNameExtension.setText(self.module_name)
-        # self.displayModule = self.displayModule_bis if self.displayModule_bis is not None else self.display[self.module_name.split(' ')[0]]
 
         if (self.module_name_before != self.module_name) and (self.module_name != "AREG_IOS"):
             self.ui.LabelProgressPatient.setText(f"Patient : 0 / {self.nb_patient}")
@@ -1222,9 +1189,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 f"Extension : {self.nb_extension_did} / {self.nb_extension_launch}"
             )
             self.ui.progressBar.setValue(0)
-
-            # if self.nb_change_bystep == 0 and self.module_name_before:
-            #     print(f'Error this module doesn\'t work {self.module_name_before}')
 
             self.module_name_before = self.module_name
             self.nb_change_bystep = 0
@@ -1249,15 +1213,10 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 print("\n\n ========= ERROR ========= \n")
                 errorText = self.process.GetErrorText()
                 print("CLI execution failed: \n \n" + errorText)
-                # error
-                # errorText = caller.GetErrorText()
-                # print("\n"+ 70*"=" + "\n\n" + errorText)
-                # print(70*"=")
                 self.onCancel()
 
             else:
                 print("\n\n ========= PROCESSED ========= \n")
-                # print("PROGRESS :",self.displayModule.progress)
 
                 print(self.process.GetOutputText())
                 try:
@@ -1288,9 +1247,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             f"Extension : {self.nb_extension_did} / {self.nb_extension_launch}"
         )
         self.ui.progressBar.setValue(0)
-
-        # if self.nb_change_bystep == 0:
-        #     print(f'Erreur this module didnt work {self.module_name_before}')
 
         self.nb_change_bystep = 0
         total_time = time.time() - self.startTime
@@ -1483,16 +1439,9 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """
 
     def initCheckBoxCBCT(self, Method, layout, tohide: qt.QLabel):
-        # self.ui.advancedCollapsibleButton.setMaximumHeight(180)
         if not tohide is None:
             tohide.setHidden(True)
         dic = Method.DicLandmark()
-        # status = Method.existsLandmark('','')
-        # Create a checkbox
-        # self.ldmk_reg_checkbox = qt.QCheckBox()
-        # self.ldmk_reg_checkbox.setText("Register Landmark")
-        # self.ldmk_reg_checkbox.setEnabled(False)
-        # layout.addWidget(self.ldmk_reg_checkbox)
 
         dicchebox = {}
         for i, (title, liste) in enumerate(dic.items()):
@@ -1503,8 +1452,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             for struct in liste:
                 checkbox = qt.QCheckBox()
                 checkbox.setText(struct)
-                # if struct in ['Cranial Base','Mandible','Maxilla']:
-                #     checkbox.setChecked(True)
                 tab.addWidget(checkbox)
                 listcheckboxlandmark.append(checkbox)
 
@@ -1521,17 +1468,12 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self, tabWidget: QTabWidget, name: str, index: int, numberItems=None
     ):
         new_widget = QWidget()
-        # new_widget.setMinimumHeight(150)
-        # new_widget.resize(tabWidget.size)
-        # tabWidget.setMaximumHeight(10)
         if numberItems is not None:
             tabWidget.setMinimumHeight(46 * numberItems)
 
         layout = QGridLayout(new_widget)
 
         scr_box = QScrollArea(new_widget)
-        # scr_box.setMaximumHeight(100)
-        # scr_box.resize(tabWidget.size)
 
         layout.addWidget(scr_box, 0, 0)
 
@@ -1684,7 +1626,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         Called when the application closes and the module widget is destroyed.
         """
         if self.logic.cliNode is not None:
-            # if self.logic.cliNode.GetStatus() & self.logic.cliNode.Running:
             self.logic.cliNode.Cancel()
 
         self.removeObservers()
@@ -1784,14 +1725,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.invertOutputCheckBox.checked = (
             self._parameterNode.GetParameter("Invert") == "true"
         )
-
-        # Update buttons states and tooltips
-        # if self._parameterNode.GetNodeReference("InputVolume") and self._parameterNode.GetNodeReference("OutputVolume"):
-        #   self.ui.applyButton.toolTip = "Compute output volume"
-        #   self.ui.applyButton.enabled = True
-        # else:
-        #   self.ui.applyButton.toolTip = "Select input and output volume nodes"
-        #   self.ui.applyButton.enabled = False
 
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False

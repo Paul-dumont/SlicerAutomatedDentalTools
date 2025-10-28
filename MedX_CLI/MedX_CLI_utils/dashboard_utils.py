@@ -15,10 +15,7 @@ def set_age_data(df):
 def set_sleep_data(df):
     # Sleep disorder data (including chronic fatigue)
         sleep_col = "sleep_disorder_type"
-        # print(test.sum())
-        # print("Colonne sleep_disorder_type complète :\n",s)
         vals = df[sleep_col].astype(str).str.strip().str.lower().replace({"nan": "", "none": ""})
-        # print("Unique values in sleep_disorder_type:", vals.unique())
         def classify_sleep(val):
             if val == "unknown":
                 return "unknown"
@@ -35,7 +32,6 @@ def set_sleep_data(df):
 def set_tenderness_data(df):
     # Tenderness/Stiffness/Soreness data
     tenderness_metrics = ["muscle_tenderness_present", "muscle_stiffness_present", "muscle_soreness_present"]
-    # print(df["muscle_tenderness_present"])
     def classify_row(row):
         vals = [str(row[col]).strip().lower() for col in tenderness_metrics]
         # Si au moins une colonne n'est pas false/unknown/vide → true
@@ -77,9 +73,7 @@ def set_left_stick_data(df):
     metrics_titles = ["Headache\nIntensity", "Daily Pain\nIntensity", "Diet\nScore", "TMJ pain\nRating", "Disability\nRating"]
     
     means = df[metrics].mean()
-    # means = means.fillna(0) if means.isna().any() else means
     std_devs = df[metrics].std()
-    # std_devs = std_devs.fillna(0) if std_devs.isna().any() else std_devs
     
     return metrics_titles, means, std_devs
 

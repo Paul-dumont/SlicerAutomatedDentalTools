@@ -96,14 +96,6 @@ def orientation_f(source,target,landmarks):
     matrix = np.concatenate((matrix,np.array([[0,0,0,1]])),axis=0)
 
 
-    # matrix = np.matmul(matrix,matrix_translation)
-
-
-
-    
-
-
-
     output = vtk.vtkPolyData()
     output.DeepCopy(source)
 
