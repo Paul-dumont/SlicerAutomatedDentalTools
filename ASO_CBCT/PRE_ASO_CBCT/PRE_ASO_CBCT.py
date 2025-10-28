@@ -53,7 +53,6 @@ def ResampleImage(image, transform):
     orig_center = np.array(
         image.TransformContinuousIndexToPhysicalPoint(np.array(image.GetSize()) / 2.0)
     )
-    # new_center = np.array(target.TransformContinuousIndexToPhysicalPoint(np.array(target.GetSize())/2.0))
     new_origin = orig_origin - orig_center
     resample.SetOutputOrigin(new_origin)
 

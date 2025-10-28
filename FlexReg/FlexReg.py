@@ -355,9 +355,6 @@ class FlexRegWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
          Open finder to let the user choose is folder
         """ 
 
-        # surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
-        # self.ui.lineEditOutput.setText(surface_folder)
-
 
         if nom=="Output":
             surface_folder = QFileDialog.getExistingDirectory(self.parent, "Select a scan folder")
@@ -1335,7 +1332,6 @@ class WidgetParameter:
         out_path = os.path.join(directory, folder_name)
 
         if not os.path.exists(out_path):
-            # print("Downloading {}...".format(folder_name.split(os.sep)[0]))
             os.makedirs(out_path)
 
             temp_path = os.path.join(directory, "temp.zip")
@@ -1359,7 +1355,6 @@ class WidgetParameter:
                 progress.setWindowTitle(
                     "Downloading {}...".format(folder_name.split(os.sep)[0])
                 )
-                # progress.setWindowFlags(qt.Qt.WindowStaysOnTopHint)
                 progress.show()
                 length = response.info().get("Content-Length")
                 if length:
@@ -1446,9 +1441,6 @@ class WidgetParameter:
     def selectFile(self):
         path_file = QFileDialog.getOpenFileName(self.parent,'Open a file','', 'VTK Files (*.vtk)')
 
-        # path_file = QFileDialog.getOpenFileName(self.parent,
-        #                                         'Open a file',
-        #                                         'VTK File (*.vtk)',)
         self.lineedit.setText(path_file)
 
     def checkLineEdit(self)->bool:
@@ -1855,7 +1847,6 @@ class WidgetParameter:
 
 
         self.label_time.setText(f"Checking if pytorch3d is installed")
-        # if "Error" in self.logic.check_if_pytorch3d() : # pytorch3d not installed or badly installed 
         process = self.logic.install_pytorch3d()
         start_time = time.time()
         previous_time = start_time
@@ -1868,9 +1859,6 @@ class WidgetParameter:
             This task may take a few minutes.\ntime: {formatted_time}
             """).strip()
             self.label_time.setText(text)
-        # else:
-        #     self.label_time.setText(f"pytorch3d is already installed")
-        #     print("pytorch3d already installed")
 
         self.all_installed = True   
         return True
@@ -2345,7 +2333,7 @@ class WidgetParameter:
         """
         Check if the Butterfly patch is available for the provided model node.
         """
-        polyData = model_node#.GetPolyData()
+        polyData = model_node
         if polyData:
             scalars = polyData.GetPointData().GetScalars(name)
             return scalars is not None

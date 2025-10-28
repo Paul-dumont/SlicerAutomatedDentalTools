@@ -148,11 +148,6 @@ class ASO(ScriptedLoadableModule):
             nodeNames="ASO2",
         )
 
-        # self.ui.ButtonSearchModelAli.clicked.connect(
-        #     lambda: self.SearchModel(self.ui.lineEditModelAli)
-        # )
-
-
 class PopUpWindow(qt.QDialog):
     """PopUpWindow class
     This class is used to create a pop-up window with a list of buttons
@@ -367,9 +362,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                                         8888888 888    Y888 8888888     888
 
         """
-
-        # self.initCheckbox(self.MethodDic['Semi_IOS'],self.ui.LayoutLandmarkSemiIOS,self.ui.tohideIOS)
-        # self.initCheckbox(self.MethodDic['Auto_IOS'],self.ui.LayoutLandmarkAutoIOS,self.ui.tohideIOS)
         self.initCheckboxIOS(
             self.MethodDic["Auto_IOS"],
             self.ui.LayoutAutoIOS_tooth,
@@ -396,14 +388,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.tohideCBCT,
         )
         self.HideComputeItems()
-        # self.initTest(self.MethodDic['Semi_IOS'])
-
-        # self.dicchckbox=self.ActualMeth.getcheckbox()
-        # self.dicchckbox2=self.ActualMeth.getcheckbox2()
-
-        # self.enableCheckbox()
-
-        # self.SwitchMode(0)
         self.SwitchType()
 
         """
@@ -479,7 +463,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if index == 0:  # Fully Automated
             self.ui.label_3.setText("Scan Folder")
-            # self.ui.label_6.setVisible(True)
             self.ui.checkBoxSmallFOV.setVisible(False)
             self.ui.lineEditModelAli.setVisible(False)
             self.ui.ButtonSearchModelAli.setVisible(False)
@@ -559,10 +542,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         if self.type == "IOS":
             self.isDCMInput = False
-        # best = ['Ba','N','RPo']
-        # for checkbox in self.logic.iterillimeted(self.dicchckbox):
-        #     if checkbox.text in best and checkbox.isEnabled():
-        #         checkbox.setCheckState(True)
 
     def ClearAllLineEdits(self):
         """Function to clear all the line edits"""
@@ -579,7 +558,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         out_path = os.path.join(directory, folder_name)
 
         if not os.path.exists(out_path):
-            # print("Downloading {}...".format(folder_name.split(os.sep)[0]))
             os.makedirs(out_path)
 
             temp_path = os.path.join(directory, "temp.zip")
@@ -812,8 +790,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         for checkbox in self.logic.iterillimeted(self.dicchckbox):
             if checkbox.text in best and checkbox.isEnabled():
                 checkbox.setCheckState(True)
-            # else :
-            #     checkbox.setCheckState(False)
 
     def enableCheckbox(self):
         """Function to enable the checkbox depending on the presence of landmarks"""
@@ -891,7 +867,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             smallFOV=str(self.ui.checkBoxSmallFOV.isChecked()),
             isDCMInput=self.isDCMInput,
         )
-        # print('error',error)
         if isinstance(error, str):
             qt.QMessageBox.warning(self.parent, "Warning", error.replace(",", "\n"))
 
@@ -936,7 +911,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.label_LibsInstallation.setHidden(True)
         self.startTime = time.time()
 
-        # self.ui.progressBar.setMaximum(self.nb_patient)
         self.ui.progressBar.setValue(0)
 
         self.ui.LabelProgressPatient.setText(f"Patient : 0 / {self.nb_patient}")
@@ -997,9 +971,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             )
             self.ui.progressBar.setValue(0)
 
-            # if self.nb_change_bystep == 0 and self.module_name_before:
-            #     print(f'Error this module doesn\'t work {self.module_name_before}')
-
             self.module_name_before = self.module_name
             self.nb_change_bystep = 0
 
@@ -1023,10 +994,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 print("\n\n ========= ERROR ========= \n")
                 errorText = self.process.GetErrorText()
                 print("CLI execution failed: \n \n" + errorText)
-                # error
-                # errorText = caller.GetErrorText()
-                # print("\n"+ 70*"=" + "\n\n" + errorText)
-                # print(70*"=")
                 self.onCancel()
 
             else:
@@ -1055,9 +1022,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             f"Extension : {self.nb_extension_did} / {self.nb_extension_launch}"
         )
         self.ui.progressBar.setValue(0)
-
-        # if self.nb_change_bystep == 0:
-        #     print(f'Erreur this module didnt work {self.module_name_before}')
 
         self.module_name_before = self.module_name
         self.nb_change_bystep = 0
@@ -1180,7 +1144,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if not tohide is None:
             tohide.setHidden(True)
         dic = Method.DicLandmark()
-        # status = Method.existsLandmark('','')
         dicchebox = {}
         dicchebox2 = {}
         for type, tab in dic.items():
@@ -1197,8 +1160,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     checkbox2 = QCheckBox()
                     checkbox.setText(landmark)
                     checkbox2.setText(landmark)
-                    # checkbox.setEnabled(status[landmark])
-                    # checkbox2.setEnabled(status[landmark])
                     checkbox2.toggled.connect(checkbox.setChecked)
                     checkbox.toggled.connect(checkbox2.setChecked)
                     widget.addWidget(checkbox)
@@ -1218,13 +1179,11 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def CreateMiniTab(self, tabWidget: QTabWidget, name: str, index: int):
         """Function to create a new tab in the tabWidget"""
         new_widget = QWidget()
-        # new_widget.setMinimumHeight(3)
         new_widget.resize(tabWidget.size)
 
         layout = QGridLayout(new_widget)
 
         scr_box = QScrollArea(new_widget)
-        # scr_box.setMinimumHeight(50)
         scr_box.resize(tabWidget.size)
 
         layout.addWidget(scr_box, 0, 0)
@@ -1702,14 +1661,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._parameterNode.GetParameter("Invert") == "true"
         )
 
-        # Update buttons states and tooltips
-        # if self._parameterNode.GetNodeReference("InputVolume") and self._parameterNode.GetNodeReference("OutputVolume"):
-        #   self.ui.applyButton.toolTip = "Compute output volume"
-        #   self.ui.applyButton.enabled = True
-        # else:
-        #   self.ui.applyButton.toolTip = "Select input and output volume nodes"
-        #   self.ui.applyButton.enabled = False
-
         # All the GUI updates are done
         self._updatingGUIFromParameterNode = False
 
@@ -1732,7 +1683,6 @@ class ASOWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self._parameterNode.SetNodeReferenceID(
             "OutputVolume", self.ui.outputSelector.currentNodeID
         )
-        # self._parameterNode.SetParameter("Threshold", str(self.ui.imageThresholdSliderWidget.value))
         self._parameterNode.SetParameter(
             "Invert", "true" if self.ui.invertOutputCheckBox.checked else "false"
         )

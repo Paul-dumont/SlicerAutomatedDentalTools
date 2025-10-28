@@ -28,8 +28,6 @@ def Search(path : str,*args ) :
         else:
             arguments.append(arg)
 
-    #result = {key: [i for i in glob.iglob(os.path.join(path,'**','*'),recursive=True),if i.endswith(key)] for key in arguments}
-
     result = {}  # Initialize an empty dictionary
 
     for key in arguments:

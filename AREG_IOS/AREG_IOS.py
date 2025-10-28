@@ -1,15 +1,10 @@
 #!/usr/bin/env python-real
 
-# installPackages()
 import os
 import sys
 import shutil
 import argparse
 import platform
-
-
-# from tqdm import tqdm
-
 
 fpath = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(fpath)
@@ -66,17 +61,13 @@ def main(args):
     if dataset.isLower():
         lower = True
         
-
-    # pbar = tqdm(total=len(dataset)*3,desc='Segment Palate')
     for idx in range(len(dataset)):
         print("idx : ",idx)
 
         name = os.path.basename(dataset.getUpperPath(idx, "T1"))
 
-        # pbar.set_description(f'Patch {name}')
         surf_T1 = dataset.getUpperSurf(idx, "T1")
         surf_T1 = Patched(dataset[idx, "T1"], surf_T1)
-        # pbar.update(1)
 
         name = os.path.basename(dataset.getUpperPath(idx, "T1"))
 
@@ -86,15 +77,11 @@ def main(args):
             log_f.write(str(1))
 
         name = os.path.basename(dataset.getUpperPath(idx, "T2"))
-        # pbar.set_description(f'Patch {name}')
         surf_T2 = dataset.getUpperSurf(idx, "T2")
         surf_T2 = Patched(dataset[idx, "T2"], surf_T2)
-        # pbar.update(1)
 
         with open(args.log_path, "r+") as log_f:
             log_f.write(str(1))
-
-        # pbar.set_description('ICP')
 
         output_icp = icp.run(surf_T2, surf_T1)
 
@@ -126,8 +113,6 @@ def main(args):
             if surf_lower!=None :
                 name_lower = os.path.basename(dataset.getLowerPath(idx, "T1"))
                 WriteSurf(surf_lower, args.output, name_lower, args.suffix)
-
-        # pbar.update(1)
 
         with open(args.log_path, "w+") as log_f:
             log_f.write(str(idx + 1))

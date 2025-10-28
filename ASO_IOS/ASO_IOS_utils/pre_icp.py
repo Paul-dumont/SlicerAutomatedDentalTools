@@ -130,8 +130,6 @@ def PrePreAso(source, target, landmarks):
             mean_target[right],
         )
 
-    # meanTeeth = vtkMeanTeeth([int(left),int(middle),int(right)],property='PredictedID')
-
     mean_source = meanTeeth(source)
     mean_target = meanTeeth(target)
 
@@ -164,18 +162,6 @@ def PrePreAso(source, target, landmarks):
     angle_direction = np.arccos(dt)
     matrix_direction = RotationMatrix(direction_normal, angle_direction)
 
-    # median_source = np.median(vtk_to_numpy(source.GetPoints().GetData()),axis=0)
-    # median_target = np.median(vtk_to_numpy(target.GetPoints().GetData()),axis=0)
-
-    # median_source = np.median(np.array([mean_source[right],mean_source[left],mean_source[middle]]),axis=0)
-    # median_target = np.median(np.array([mean_target[right],mean_target[left],mean_target[middle]]),axis=0)
-
-    # mean = median_target-median_source
-
-    # mean = np.expand_dims(mean,axis=0)
-    # matrix_translation = np.concatenate((np.identity(3),mean.T),axis=1)
-    # matrix_translation = np.concatenate((matrix_translation,np.array([[0,0,0,1]])),axis=0)
-
     matrix = np.matmul(matrix_direction, matrix_normal)
 
     left_source = np.matmul(matrix, left_source)
@@ -189,8 +175,6 @@ def PrePreAso(source, target, landmarks):
 
     matrix = np.concatenate((matrix, np.array([mean]).T), axis=1)
     matrix = np.concatenate((matrix, np.array([[0, 0, 0, 1]])), axis=0)
-
-    # matrix = np.matmul(matrix,matrix_translation)
 
     output = vtk.vtkPolyData()
     output.DeepCopy(source)

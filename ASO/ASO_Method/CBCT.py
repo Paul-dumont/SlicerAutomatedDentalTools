@@ -354,13 +354,6 @@ class Semi_CBCT(CBCT):
             input_lm = []
             input_json = super().search(input_dir, "json")["json"]
 
-            # all_lm = [self.ListLandmarksJson(file) for file in input_json]
-            # input_lm = all_lm[0]
-            # for lm_file in all_lm:
-            #     for lm in input_lm:
-            #         if lm not in lm_file:
-            #             input_lm.remove(lm)
-
             gold_json = super().search(reference_dir, "json")["json"]
             gold_lm = self.ListLandmarksJson(gold_json[0])
 

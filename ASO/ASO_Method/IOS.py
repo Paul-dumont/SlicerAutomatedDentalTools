@@ -79,9 +79,6 @@ class Auto_IOS(Method):
                 if len(files) != 1:
                     out = "Please select folder with only one .pth file"
 
-        # elif lineEditName == 'lineEditModelAli':
-        #     if len(files) !=4 :
-        #         out == 'Please five folder with 4 .pth files'
 
         return out
 
@@ -286,44 +283,11 @@ class Auto_IOS(Method):
             "folder_error": path_error,
             "log_path": kwargs["logPath"],
         }
-
-        # parameter_pre_aso= {'input':path_seg,
-        #                 'gold_folder':kwargs['gold_folder'],
-        #                 'output_folder':path_preor,
-        #                 'add_inname':kwargs['add_in_namefile'],
-        #                 'list_teeth':','.join(list_teeth),
-        #                 'jaw':'/'.join(jaw),
-        #                 'folder_error': path_error,
-        #                 'log_path': kwargs['logPath']}
-
-        # parameter_aliios ={'input':path_preor,
-        #                     'dir_models':kwargs['model_folder_ali'],
-        #                     'landmarks':' '.join(list_landmark),
-        #                     'teeth':' '.join(list_teeth),
-        #                     'save_in_folder':'false',
-        #                     'output_dir':path_preor
-        #                     }
-
-        # parameter_semi_aso= {'input':path_preor,
-        #                     'gold_folder':kwargs['gold_folder'],
-        #                     'output_folder':kwargs['folder_output'],
-        #                     'add_inname':kwargs['add_in_namefile'],
-        #                     'list_landmark':','.join(mix),
-        #                     'jaw':'/'.join(jaw),
-        #                     'folder_error':path_error,
-        #                     'log_path': kwargs['logPath']}
-
         print("parameter pre aso", parameter_pre_aso)
         print("parameter seg", parameter_seg)
-        # print('parameter aliios ',parameter_aliios)
-        # print('parameter semi ios',parameter_semi_aso)
 
         PreOrientProcess = slicer.modules.pre_aso_ios
         SegProcess = slicer.modules.crownsegmentationcli
-        # aliiosProcess = slicer.modules.ali_ios
-        # OrientProcess = slicer.modules.semi_aso_ios
-
-        # {'Process':SegProcess,'Parameter':parameter_seg},{'Process':PreOrientProcess,'Parameter':parameter_pre_aso},
         
         numberscan = self.NumberScan(kwargs["input_folder"])
         
@@ -346,23 +310,6 @@ class Auto_IOS(Method):
                     kwargs["logPath"],
                 ),
             },
-            # {
-            #     "Process": aliiosProcess,
-            #     "Parameter": parameter_aliios,
-            #     "Module": "ALI_IOS",
-            #     "Display": DisplayALIIOS(
-            #         len(mix), numberscan
-            #     ),
-            # },
-            # {
-            #     "Process": OrientProcess,
-            #     "Parameter": parameter_semi_aso,
-            #     "Module": "SEMI_ASO_IOS",
-            #     "Display": DisplayASOIOS(
-            #         numberscan if len(jaw) == 1 else int(numberscan / 2),
-            #         jaw,
-            #         kwargs["logPath"]),
-            # }
         ]
 
         return list_process

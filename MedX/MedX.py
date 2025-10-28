@@ -534,7 +534,6 @@ class MedXWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         out_path = os.path.join(directory, folder_name)
 
         if not os.path.exists(out_path):
-            # print("Downloading {}...".format(folder_name.split(os.sep)[0]))
             os.makedirs(out_path)
 
             temp_path = os.path.join(directory, "temp.zip")
@@ -558,7 +557,6 @@ class MedXWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 progress.setWindowTitle(
                     "Downloading {}...".format(folder_name.split(os.sep)[0])
                 )
-                # progress.setWindowFlags(qt.Qt.WindowStaysOnTopHint)
                 progress.show()
                 length = response.info().get("Content-Length")
                 if length:
@@ -641,7 +639,6 @@ class MedXWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             output_folder=self.ui.LineEditOutput.text,
         )
 
-        # print('error',error)
         if isinstance(error, str):
             qt.QMessageBox.warning(self.parent, "Warning", error.replace(",", "\n"))
 
@@ -666,19 +663,7 @@ class MedXWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.SummarizeButton.setEnabled(False)
         self.run_conda_tool()
         self.OnEndProcess()
-        # self.process = slicer.cli.run(
-        #     self.list_Processes_Parameters[0]["Process"],
-        #     None,
-        #     self.list_Processes_Parameters[0]["Parameter"],
-        # )
-        
-        # self.module_name = self.list_Processes_Parameters[0]["Module"]
-        # self.displayModule = self.list_Processes_Parameters[0]["Display"]
-        # self.processObserver = self.process.AddObserver(
-        #     "ModifiedEvent", self.onProcessUpdate
-        # )
 
-        # del self.list_Processes_Parameters[0]
         
     def onDashboardButton(self)->None:
         """
@@ -925,7 +910,6 @@ class MedXWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.progressBar.setFormat(f"{progress_bar_value:.2f}%")
 
     def onProcessUpdate(self, caller, event):
-        # timer = f"Time : {time.time()-self.startTime:.2f}s"
         currentTime = time.time() - self.startTime
         if currentTime < 60:
             timer = f"Time : {int(currentTime)}s"
@@ -958,15 +942,10 @@ class MedXWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 print("\n\n ========= ERROR ========= \n")
                 errorText = self.process.GetErrorText()
                 print("CLI execution failed: \n \n" + errorText)
-                # error
-                # errorText = caller.GetErrorText()
-                # print("\n"+ 70*"=" + "\n\n" + errorText)
-                # print(70*"=")
                 self.onCancel()
 
             else:
                 print("\n\n ========= PROCESSED ========= \n")
-                # print("PROGRESS :",self.displayModule.progress)
 
                 print(self.process.GetOutputText())
                 try:
@@ -1342,37 +1321,5 @@ class MedXTest(ScriptedLoadableModuleTest):
         """
 
         self.delayDisplay("Starting the test")
-
-        # Get/create input data
-
-        # import SampleData
-        # registerSampleData()
-        # inputVolume = SampleData.downloadSample('MedX1')
-        # self.delayDisplay('Loaded test data set')
-
-        # inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-        # self.assertEqual(inputScalarRange[0], 0)
-        # self.assertEqual(inputScalarRange[1], 695)
-
-        # outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
-        # threshold = 100
-
-        # # Test the module logic
-
-        # logic = MedXLogic()
-
-        # # Test algorithm with non-inverted threshold
-        # logic.process(inputVolume, outputVolume, threshold, True)
-        # outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        # self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        # self.assertEqual(outputScalarRange[1], threshold)
-
-        # # Test algorithm with inverted threshold
-        # logic.process(inputVolume, outputVolume, threshold, False)
-        # outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        # self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        # self.assertEqual(outputScalarRange[1], inputScalarRange[1])
-
-        #This module is not using MedXLogic
 
         self.delayDisplay('Test passed')

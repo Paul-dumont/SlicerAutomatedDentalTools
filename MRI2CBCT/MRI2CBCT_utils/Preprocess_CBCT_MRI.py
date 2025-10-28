@@ -87,7 +87,6 @@ class Preprocess_CBCT_MRI(Method):
 
     def Process(self, **kwargs):
         list_process=[]
-        # MRI2CBCT_ORIENT_CENTER_MRI
         MRI2CBCT_RESAMPLE_CBCT_MRI = slicer.modules.mri2cbct_resample_cbct_mri
         parameter_mri2cbct_resample_cbct_mri = {
             "input_folder_MRI": kwargs["input_folder_MRI"],
