@@ -321,19 +321,11 @@ class AutoCrop3DWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 roi_input = self.ui.editPathVolume.text
                 output_dir = self.ui.editPathOutput.text
                 suffix = self.ui.editSuffix.text
-
-                # self.thread = threading.Thread(target=self.processCropVolume, args=(path_input,roi_input,output_dir,suffix))
-                # self.thread.start()
                 self.processCropVolume(self.ui.editPathF.text,
                                         self.ui.editPathVolume.text,
                                         self.ui.editPathOutput.text,
                                         self.ui.editSuffix.text) # use module Crop Volume of Slicer
-                # Progress Bar/ thread for Crop Volume module
-                # self.worker = Worker(self.nbFiles)
-                # self.worker.signals.progress.connect(self.updateProgressCV)
-                # self.worker.signals.finished.connect(self.updateProgressCV)
-                # if not self.worker.isRunning():
-                #     self.worker.start()
+
             else:
                 box_Size =str(self.ui.checkBoxSize.isChecked())
                 self.logic = AutoCrop3DLogic(self.ui.editPathF.text,
@@ -552,7 +544,6 @@ class AutoCrop3DWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else:
                 arguments.append(arg)
 
-        #result = {key: [i for i in glob.iglob(os.path.join(path,'**','*'),recursive=True),if i.endswith(key)] for key in arguments}
 
         result = {}  # Initialize an empty dictionary
 
@@ -751,10 +742,6 @@ class AutoCrop3DWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 roiNode = slicer.util.loadMarkups(ROI_Path)
 
                 # Crop Volume is not working on segmentation so we need to put them as scans :)
-
-                # if "Seg" in patient_path or "seg" in patient_path:
-                #     inputVolume = slicer.util.loadSegmentation(patient_path)
-                # else:
                 inputVolume = slicer.util.loadVolume(patient_path)
 
                 outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
@@ -794,7 +781,6 @@ class AutoCrop3DWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
                 sys.stdin = original_stdin
 
-                # print(f"Volume saved as {output_path}")
                 slicer.mrmlScene.RemoveNode(inputVolume)
                 slicer.mrmlScene.RemoveNode(outputVolume)
                 slicer.mrmlScene.RemoveNode(roiNode)
@@ -863,39 +849,6 @@ class AutoCrop3DLogic(ScriptedLoadableModuleLogic):
         self.cliNode = slicer.cli.run(CLI_autoCrop3D,None, parameters)
 
         return CLI_autoCrop3D
-
-    # def process(self, inputVolume, outputVolume, imageThreshold, invert=False, showResult=True):
-    #     """
-    #     Run the processing algorithm.
-    #     Can be used without GUI widget.
-    #     :param inputVolume: volume to be thresholded
-    #     :param outputVolume: thresholding result
-    #     :param imageThreshold: values above/below this threshold will be set to 0
-    #     :param invert: if True then values above the threshold will be set to 0, otherwise values below are set to 0
-    #     :param showResult: show output volume in slice viewers
-    #     """
-
-    #     if not inputVolume or not outputVolume:
-    #         raise ValueError("Input or output volume is invalid")
-
-    #     import time
-    #     startTime = time.time()
-    #     logging.info('Processing started')
-
-    #     # Compute the thresholded output volume using the "Threshold Scalar Volume" CLI module
-    #     cliParams = {
-    #         'InputVolume': inputVolume.GetID(),
-    #         'OutputVolume': outputVolume.GetID(),
-    #         'ThresholdValue': imageThreshold,
-    #         'ThresholdType': 'Above' if invert else 'Below'
-    #     }
-    #     cliNode = slicer.cli.run(slicer.modules.thresholdscalarvolume, None, cliParams, wait_for_completion=True, update_display=showResult)
-    #     # We don't need the CLI module node anymore, remove it to not clutter the scene with it
-    #     slicer.mrmlScene.RemoveNode(cliNode)
-
-    #     stopTime = time.time()
-    #     logging.info(f'Processing completed in {stopTime-startTime:.2f} seconds')
-
 
 #
 # AutoCrop3DTest
@@ -968,20 +921,5 @@ def test_AutoCrop3D1(self):
             jsonROI = json.load(f)
     except:
         raise ValueError("JSON file could not be loaded")
-
-    # Test for JSON File Reading
-    # Read JSON file and verify ROI data
-
-    # Test ROI Application
-    # Apply ROI to CBCT scan and verify the operation
-
-    # Test Correctness of Cropping
-    # Compare cropped scan with expected result
-
-    # Test Error Handling
-    # Simulate various error scenarios and check responses
-
-    # Test Performance (Optional)
-    # Measure time taken for cropping operations
 
     self.delayDisplay("AutoCropCBCT test passed")

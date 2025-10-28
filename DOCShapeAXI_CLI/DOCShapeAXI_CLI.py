@@ -155,7 +155,6 @@ def saxi_gradcam(args, out_model_path):
       if args.num_classes > 1:
         args.target_class = class_idx
       mv_att = mv_cam.attribute(inputs=(X_pc,X_views), target=class_idx,attr_dim_summation=False)
-      # mv_att = multiview.attribute(inputs=(X_pc,X_views, x_v_fixed), target=class_idx,attr_dim_summation=False)
 
       mv_att = mv_att.sum(dim=1).cpu().detach() ## LayerIntegratedGradients
 

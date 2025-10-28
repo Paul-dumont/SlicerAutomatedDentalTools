@@ -6,7 +6,7 @@ from FlexReg_Method.propagation import Dilation
 
 def drawPatch(outlinePoints: list,polydata,mid,index:int):
     step = 0.2
-    radius = 0.5 # celui de Nathan
+    radius = 0.5
     radius = 1.1
     P0 = torch.tensor(np.array(outlinePoints)).unsqueeze(0).cuda()
     P1 = torch.tensor(np.array(outlinePoints[1:] + [outlinePoints[0]])).unsqueeze(0).cuda()

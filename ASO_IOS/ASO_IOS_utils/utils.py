@@ -201,7 +201,6 @@ def WriteJsonLandmarks(
         output file name
     """
     # # Load the input image
-    # spacing, origin = LoadImage(input_file)
     dirname, name = os.path.split(output_file)
     name, extension = os.path.splitext(name)
     output_file = os.path.join(output_folder, name + add_innamefile + extension)
@@ -212,7 +211,6 @@ def WriteJsonLandmarks(
         tempData = json.load(outfile)
     for i in range(len(landmarks)):
         pos = landmarks[tempData["markups"][0]["controlPoints"][i]["label"]]
-        # pos = (pos + abs(inorigin)) * inspacing
         tempData["markups"][0]["controlPoints"][i]["position"] = [
             pos[0],
             pos[1],

@@ -71,14 +71,6 @@ def main(args)-> None:
 
             Upper = [min(img_size[i], u) for i, u in enumerate(Upper)]
 
-            # # Ensure non-zero size for all dimensions and that lower < upper
-            # for i in range(3):
-            #     if Lower[i] == Upper[i]:
-            #         if Upper[i] < img_size[i] - 1:
-            #             Upper[i] += 1
-            #         elif Lower[i] > 0:
-            #             Lower[i] -= 1
-
             # Crop the image
 
             # copy img to apply changes

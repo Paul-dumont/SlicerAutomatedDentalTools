@@ -16,7 +16,6 @@ from functools import partial
 import SimpleITK as sitk
 
 
-# import AutoMatrix_Method.General_tools as gt
 from AutoMatrix_Method.General_tools import search
 
 from AutoMatrix_Method.applyMatrix import Automatrix_Method
@@ -236,7 +235,6 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
         # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
-        # "setMRMLScene(vtkMRMLScene*)" slot.
         uiWidget.setMRMLScene(slicer.mrmlScene)
 
         # Create logic class. Logic implements all computations that should be possible to run
@@ -316,7 +314,6 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         out_path = os.path.join(directory, folder_name)
 
         if not os.path.exists(out_path):
-            # print("Downloading {}...".format(folder_name.split(os.sep)[0]))
             os.makedirs(out_path)
 
             temp_path = os.path.join(directory, "temp.zip")
@@ -340,7 +337,6 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 progress.setWindowTitle(
                     "Downloading {}...".format(folder_name.split(os.sep)[0])
                 )
-                # progress.setWindowFlags(qt.Qt.WindowStaysOnTopHint)
                 progress.show()
                 length = response.info().get("Content-Length")
                 if length:
@@ -557,7 +553,6 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             output_folder=self.ui.LineEditOutput.text,
         )
 
-        # print('error',error)
         if isinstance(error, str):
             qt.QMessageBox.warning(self.parent, "Warning", error.replace(",", "\n"))
 
@@ -598,7 +593,6 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         del self.list_Processes_Parameters[0]
         
     def onProcessUpdate(self, caller, event):
-        # timer = f"Time : {time.time()-self.startTime:.2f}s"
         currentTime = time.time() - self.startTime
         if currentTime < 60:
             timer = f"Time : {int(currentTime)}s"
@@ -631,15 +625,10 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 print("\n\n ========= ERROR ========= \n")
                 errorText = self.process.GetErrorText()
                 print("CLI execution failed: \n \n" + errorText)
-                # error
-                # errorText = caller.GetErrorText()
-                # print("\n"+ 70*"=" + "\n\n" + errorText)
-                # print(70*"=")
                 self.onCancel()
 
             else:
                 print("\n\n ========= PROCESSED ========= \n")
-                # print("PROGRESS :",self.displayModule.progress)
 
                 print(self.process.GetOutputText())
                 try:
@@ -655,7 +644,6 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         "ModifiedEvent", self.onProcessUpdate
                     )
                     del self.list_Processes_Parameters[0]
-                    # self.displayModule.progress = 0
                 except IndexError:
                     self.OnEndProcess()
 
@@ -709,7 +697,6 @@ class AutoMatrixWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.ui.label_info.setText("Number of processed files : "+str(self.nbFiles)+"/"+str(self.nbFiles))
             time.sleep(0.5)
 
-            # qt.QMessageBox.information(self.parent,"Matrix applied with sucess")
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Information)
 
@@ -937,37 +924,5 @@ class AutoMatrixTest(ScriptedLoadableModuleTest):
         """
 
         self.delayDisplay("Starting the test")
-
-        # Get/create input data
-
-        # import SampleData
-        # registerSampleData()
-        # inputVolume = SampleData.downloadSample('AutoMatrix1')
-        # self.delayDisplay('Loaded test data set')
-
-        # inputScalarRange = inputVolume.GetImageData().GetScalarRange()
-        # self.assertEqual(inputScalarRange[0], 0)
-        # self.assertEqual(inputScalarRange[1], 695)
-
-        # outputVolume = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLScalarVolumeNode")
-        # threshold = 100
-
-        # # Test the module logic
-
-        # logic = AutoMatrixLogic()
-
-        # # Test algorithm with non-inverted threshold
-        # logic.process(inputVolume, outputVolume, threshold, True)
-        # outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        # self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        # self.assertEqual(outputScalarRange[1], threshold)
-
-        # # Test algorithm with inverted threshold
-        # logic.process(inputVolume, outputVolume, threshold, False)
-        # outputScalarRange = outputVolume.GetImageData().GetScalarRange()
-        # self.assertEqual(outputScalarRange[0], inputScalarRange[0])
-        # self.assertEqual(outputScalarRange[1], inputScalarRange[1])
-
-        #This module is not using AutoMatrixLogic
 
         self.delayDisplay('Test passed')

@@ -186,8 +186,3 @@ def butterflyPatch(surf,
 
 
     surf.GetPointData().AddArray(V_labels_prediction)
-
-
-
-
-    # return surf

@@ -1,7 +1,6 @@
 import torch
 import monai
 
-# import pytorch_lightning as pl
 from pytorch_lightning import LightningModule
 import torchmetrics
 from pytorch3d.renderer import (

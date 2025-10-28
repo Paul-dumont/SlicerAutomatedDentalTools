@@ -148,7 +148,6 @@ def WriteSurf(surf, output_folder, name, inname):
         os.mkdir(output_folder)
 
     writer = vtk.vtkPolyDataWriter()
-    # print(os.path.join(output_folder,f"{name}{inname}{extension}"))
     writer.SetFileName(os.path.join(output_folder, f"{name}{inname}{extension}"))
     writer.SetInputData(surf)
     writer.Update()

@@ -96,18 +96,13 @@ class vtkMeshTeeth(vtkTeeth):
     def __call__(self, surf):
         if self.automatic_property:
             self.property = self.GetLabelSurface(surf)
-        # self.CheckLabelSurface(surf,self.property,no_change_property=self.no_change_property)
-        # region_id = vtk_to_numpy(surf.GetPointData().GetScalars(self.property))
-        # list_teeth = np.unique(region_id)[1:-1]
         list_points = []
         size = 0
 
         for points, _ in vtkIterTeeth(self.list_teeth, surf, property=self.property):
             list_points.append(points)
             size += points.shape[0]
-
-        # print(f'list point {list_points}')
-        # shuffle(list_points)
+            
         Points = vtk.vtkPoints()
         Vertices = vtk.vtkCellArray()
         labels = vtk.vtkStringArray()

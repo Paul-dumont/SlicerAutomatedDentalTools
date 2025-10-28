@@ -4,48 +4,6 @@ from collections import deque
 import vtk
 import numpy as np
 
-# def wrap_error(func):
-#     nbloop =1
-#     def wrapper(arg_point,F):
-#         error = False
-#         nbloop = 1
-#         neighbours = torch.tensor([]).cuda()
-#         while error :
-#             arg_point_loop = 
-#             try :
-#                 neighbours_ = func(arg_point,F)
-#             except RuntimeError :
-#                 error = True
-
-#             neighbours = torch.cat([neighbours,neighbours_])
-
-#         return neighbours
-
-#     return wrapper
-
-
-# class WrappError:
-#     def __init__(self,func) -> None:
-#         self._func = func
-#         self.nbloop = 1
-
-#     def __call__(self,arg_point,F) :
-#         error = False
-#         neighbours = torch.tensor([]).cuda()
-#         while error :
-#             arg_point_loop = 
-#             try :
-#                 neighbours_ = func(arg_point,F)
-#             except RuntimeError :
-#                 error = True
-
-#             neighbours = torch.cat([neighbours,neighbours_])
-
-#         return neighbours
-    
-
-#     def limitTest()
-
 
 def Difference(t1,t2):
     t1 = t1.unsqueeze(0).expand(len(t2),-1)
@@ -64,29 +22,6 @@ def Neighbours(arg_point,F):
 
     neighbours = torch.unique(F[arg[:,1],:])
     return neighbours
-
-
-
-# def GetNeighbors(vtkdata, pid):
-
-#     if isinstance(pid, torch.Tensor):
-#         pid = pid.item()
-#     elif isinstance(pid, np.ndarray):
-#         pid = int(pid[0])
-
-#     cells_id = vtk.vtkIdList()
-#     vtkdata.GetPointCells(pid, cells_id)
-#     neighbor_pids = []
-
-#     for ci in range(cells_id.GetNumberOfIds()):
-#         points_id_inner = vtk.vtkIdList()
-#         vtkdata.GetCellPoints(cells_id.GetId(ci), points_id_inner)
-#         for pi in range(points_id_inner.GetNumberOfIds()):
-#             pid_inner = points_id_inner.GetId(pi)
-#             if pid_inner != pid:
-#                 neighbor_pids.append(pid_inner)
-
-#     return np.unique(neighbor_pids).tolist()
 
 
 def GetNeighbors(vtkdata, pids_tensor):
@@ -120,7 +55,6 @@ def Dilation(arg_point,F,texture,surf):
     texture = texture.cuda()
     neighbour = Neighbours(arg_point,F)
     arg_texture = torch.argwhere(texture == 1).squeeze()
-    # dif = NoIntersection(arg_texture,neighbour)
     dif = neighbour.to(torch.int64)
     dif  = Difference(arg_texture,dif)
 
