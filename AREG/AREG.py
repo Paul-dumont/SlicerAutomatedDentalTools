@@ -1098,21 +1098,49 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 return
             # /!\ Launch of the first process /!\
             print("module name : ", self.module_name)
-            # if we are on windows, crownsegmentation and areg ios need to be run in wsl because of Pytorch3D
-            if self.module_name in ["CrownSegmentationcli T1", "AREG_IOS"]:
-                if "CrownSegmentationcli" in self.module_name:
-                    self.run_conda_tool("seg")
-                else:
-                    self.nb_extension_did += 1
-                    self.run_conda_tool("areg")
+            print("type: ",self.type)
+            print("method:",self.ActualMethName)
 
-                # After conda handling, check whether there are more processes in the queue.
-                if not self.list_Processes_Parameters:
-                    try:
-                        self.OnEndProcess()
-                    except Exception:
-                        logging.exception("OnEndProcess failed after conda run")
-                    return
+            if self.type == "CBCT":
+                self.process = slicer.cli.run(
+                    self.list_Processes_Parameters[0]["Process"],
+                    None,
+                    self.list_Processes_Parameters[0]["Parameter"],
+                )
+                self.module_name = self.list_Processes_Parameters[0]["Module"]
+                self.displayModule = self.list_Processes_Parameters[0]["Display"]
+                self.processObserver = self.process.AddObserver(
+                    "ModifiedEvent", self.onProcessUpdate
+                )
+                del self.list_Processes_Parameters[0]
+
+            elif self.type == "IOS":
+                if self.module_name in ["CrownSegmentationcli T1", "AREG_IOS"]:
+                    if "CrownSegmentationcli" in self.module_name:
+                        self.run_conda_tool("seg")
+                        print("fin du 1er")
+                        print("nom du deuxieme:",self.list_Processes_Parameters[0]["Module"])
+                        self.process = slicer.cli.run(
+                            self.list_Processes_Parameters[0]["Process"],
+                            None,
+                            self.list_Processes_Parameters[0]["Parameter"],
+                        )
+                        self.module_name = self.list_Processes_Parameters[0]["Module"]
+                        self.displayModule = self.list_Processes_Parameters[0]["Display"]
+                        self.processObserver = self.process.AddObserver(
+                            "ModifiedEvent", self.onProcessUpdate
+                        )
+                        del self.list_Processes_Parameters[0]
+                    else:
+                        self.nb_extension_did += 1
+                        self.run_conda_tool("areg")
+
+                        if not self.list_Processes_Parameters:
+                            try:
+                                self.OnEndProcess()
+                            except Exception:
+                                logging.exception("OnEndProcess failed after conda run")
+                            return
               
 
     def onProcessStarted(self):
@@ -1383,6 +1411,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 
         elif type=="areg":
             args = self.list_Processes_Parameters[0]["Parameter"]
+            print("name:",self.list_Processes_Parameters[0]["Module"])
             print("args : ", args)
             self.module_name = self.list_Processes_Parameters[0]["Module"]
             
