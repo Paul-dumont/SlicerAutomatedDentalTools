@@ -98,7 +98,7 @@ def main():
     args = parser.parse_args()
     
     # Approximate MRI to CBCT
-    first_approximation_folder = run_script_first_approximation(args.cbct_folder, args.mri_folder, args.output_folder)
+    run_script_first_approximation(args.cbct_folder, args.mri_folder, args.output_folder)
 
 if __name__ == "__main__":
     print("Debug: MRI2CBCT_APPROX module is being loaded")

@@ -17,7 +17,6 @@ class DatasetPatch(Dataset):
     def __init__(self, T1, T2, surf_property):
         self.list_upper, self.list_lower = Sort(T1, T2)
         self.surf_property = surf_property
-        # print(f'Init class list upper {self.list_upper}')
 
     def __len__(self):
 
@@ -103,7 +102,6 @@ def Sort(T1: str, T2: str) -> tuple[list, list]:
     """
     T1_files = glob.glob(os.path.join(T1, "*"))
     T2_files = glob.glob(os.path.join(T2, "*"))
-    # print(f'in sort T1 files : {T1_files}')
 
     if not insideLower(T1_files):  # check if there are Lower arches in list of file
         # if there are not lower arches

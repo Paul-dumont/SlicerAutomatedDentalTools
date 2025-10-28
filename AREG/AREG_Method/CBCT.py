@@ -75,12 +75,6 @@ class Semi_CBCT(Method):
             else:
                 return None
 
-        # if lineEditName == 'lineEditModelAli':
-        #     if len(super().search(model_folder,'pth')['pth']) == 0:
-        #         return 'Folder must have ALI models files'
-        #     else:
-        #         return None
-
     def TestProcess(self, **kwargs) -> str:
         out = ""
 
@@ -184,20 +178,6 @@ class Semi_CBCT(Method):
             for checkbox in checkboxs:
                 if checkbox.isChecked():
                     listchecked[key] += [checkbox.text]
-
-        # if not len(diccheckbox) == 0:
-        #     for checkboxs in diccheckbox.values():
-        #         for checkbox in checkboxs:
-        #             if checkbox.isChecked():
-        #                 listchecked.append(checkbox.text)
-        # if in_str:
-        #     listchecked_str = ''
-        #     for i,lm in enumerate(listchecked):
-        #         if i<len(listchecked)-1:
-        #             listchecked_str+= lm+' '
-        #         else:
-        #             listchecked_str+=lm
-        #     return listchecked_str
 
         return listchecked
 
@@ -814,8 +794,6 @@ class Or_Auto_CBCT(Semi_CBCT):
             }
         ]
 
-        # print('AMASSS Mask Parameters:', parameter_amasss_mask_t1)
-        # print()
         centered_T2 = kwargs["input_t2_folder"] + "_Center"
         parameter_pre_aso = {
             "input": kwargs["input_t2_folder"],

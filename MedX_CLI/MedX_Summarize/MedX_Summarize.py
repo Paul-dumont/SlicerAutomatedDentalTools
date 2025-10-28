@@ -43,7 +43,6 @@ def generate_combined_summary(model, tokenizer, text, max_chunk_size=3500, model
             generation_config=generation_config
         )
         summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-        # print(f"Generated summary: {summary}")
         summaries.append(summary)
         
 

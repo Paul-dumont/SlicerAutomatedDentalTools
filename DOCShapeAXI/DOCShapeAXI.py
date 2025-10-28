@@ -95,8 +95,6 @@ class DOCShapeAXIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui = slicer.util.childWidgetVariables(uiWidget)
 
     # Set scene in MRML widgets. Make sure that in Qt designer the top-level qMRMLWidget's
-    # "mrmlSceneChanged(vtkMRMLScene*)" signal in is connected to each MRML widget's.
-    # "setMRMLScene(vtkMRMLScene*)" slot.
     uiWidget.setMRMLScene(slicer.mrmlScene)
 
     # Create logic class. Logic implements all computations that should be possible to run
@@ -160,9 +158,6 @@ class DOCShapeAXIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def exit(self) -> None:
     """Called each time the user opens a different module."""
     # Do not react to parameter node changes (GUI will be updated when the user enters into the module)
-    # if self._parameterNode:
-    #   self._parameterNode.disconnectGui(self._parameterNodeGuiTag)
-    #   self._parameterNodeGuiTag = None
     self.removeObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self.updateGUIFromParameterNode)
 
   def onSceneStartClose(self, caller, event) -> None:

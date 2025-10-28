@@ -642,59 +642,6 @@ def generate_dashboard_figure(df: pd.DataFrame, output_folder: str = None) -> pl
     # Set x-ticks to the age bins
     ax_age_distribution.set_xticks(range(len(age_bins_plot)))  # Set x-ticks
     ax_age_distribution.set_xticklabels(age_bins_plot, rotation=22.5, ha='center', fontsize=10)  # Rotate x-labels for readability
-                
-    # ================== Bottom Right: Disc Displacement Donuts ==================
-    # gs_disc_displacement = gs_bottom_right[1, 1].subgridspec(1, 2, wspace=0.01)
-    # # Left TMJ
-    # ax_left_tmj = fig.add_subplot(gs_disc_displacement[0, 0])
-    # left_labels = ["w/o reduction", "w/ reduction", "reduction not specified", "no displacement"]
-    # left_sizes = [left_tmj_data["w/o reduction"], left_tmj_data["w/ reduction"], 
-    #             left_tmj_data["reduction not specified"], left_tmj_data["no displacement"]]
-    # left_colors = ['#ff6b6b', '#ffb366', '#66c2a5', '#8da0cb']
-
-    # wedges, texts, autotexts = ax_left_tmj.pie(
-    #     left_sizes,
-    #     labels=None,  # Remove default labels
-    #     autopct='%1.1f%%',
-    #     colors=left_colors,
-    #     startangle=90,
-    #     wedgeprops={'width': 1, 'edgecolor': 'white', 'linewidth': 1},
-    #     textprops={'fontsize': 9}
-    # )
-
-    # ax_left_tmj.set_title('Left TMJ\nDisc\nDisplacement', fontsize=12, pad=0, fontweight='semibold')
-    # ax_left_tmj.legend(
-    #     wedges,  # Use the pie chart wedges for color reference
-    #     left_labels,  # Labels for the legend
-    #     loc='lower center',  # Position the legend at the bottom
-    #     bbox_to_anchor=(1.125, -0.6),  # Adjust vertical position
-    #     ncol=1,  # Display legend items in 2 columns
-    #     fontsize=10,  # Legend font size
-    #     frameon=False  # Remove legend border
-    # )
-
-    # ax_left_tmj.set_aspect('equal')
-
-    # # Right TMJ
-    # ax_right_tmj = fig.add_subplot(gs_disc_displacement[0, 1])
-    # right_labels = ["w/o reduction", "w/ reduction", "reduction not specified", "no displacement"]
-    # right_sizes = [right_tmj_data["w/o reduction"], right_tmj_data["w/ reduction"], 
-    #             right_tmj_data["reduction not specified"], right_tmj_data["no displacement"]]
-    # right_colors = ['#ff6b6b', '#ffb366', '#66c2a5', '#8da0cb']
-
-    # wedges, texts, autotexts = ax_right_tmj.pie(
-    #     right_sizes,
-    #     labels=None,  # Remove default labels
-    #     autopct='%1.1f%%',
-    #     colors=right_colors,
-    #     startangle=90,
-    #     wedgeprops={'width': 1, 'edgecolor': 'white', 'linewidth': 1},
-    #     textprops={'fontsize': 9}
-    # )
-
-    # ax_right_tmj.set_title('Right TMJ\nDisc\nDisplacement', fontsize=12, pad=0, fontweight='semibold')
-
-    # ax_right_tmj.set_aspect('equal')
     
     # Final adjustments
     plt.subplots_adjust(top=0.85, bottom=0.07, left=0.04, right=0.98)

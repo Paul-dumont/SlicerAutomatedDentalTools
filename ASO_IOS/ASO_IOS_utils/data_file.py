@@ -237,57 +237,6 @@ class Files_vtk_link(Files):
 
         return self.list_file
 
-
-# @dataclass()
-# class Files_vtk_json_link2(Files):
-#     jaw : str = field(repr=False)
-
-#     def __post_init__(self):
-#         self.list_file = []
-#         self.list_file = self.__organise__(self.folder)
-
-#     def __organise__(self,folder):
-#         list_file = []
-#         dic = self.search(folder,'.vtk','.json')
-#         list_json = dic['.json']
-#         list_vtk = dic['.vtk']
-#         list_notgoodjaw = []
-#         for vtk in list_vtk:
-#             if self.jaw != self.TypeOfJaw(vtk):
-#                 list_notgoodjaw.append(vtk)
-
-
-#         list_vtk = list(set(list_vtk)-set(list_notgoodjaw))
-#         list_jaw = []
-#         json_remove = None
-#         for vtk in list_vtk :
-#             vtk_jaw , vtk_name = self.__name_file__(vtk)
-#             for json in list_json :
-#                 json_jaw , json_name = self.__name_file__(json)
-#                 if vtk_name in json_name :
-#                     fil = Jaw_File(json= json , vtk= vtk, jaw = json_jaw, name = vtk_name)
-#                     list_jaw.append(fil)
-#                     json_remove = json
-#                     break
-#             if json_remove is not None :
-#                 list_json.remove(json)
-
-#             json_remove = None
-
-
-# for jaw_f in list_jaw :
-#     for vtk in list_notgoodjaw :
-#         vtk_jaw , vtk_name = self.__name_file__(vtk)
-#         if vtk_name == jaw_f.name :
-#             if self.jaw == 'Upper':
-#                 list_file.append(Mouth_File(Upper=jaw_f, Lower= vtk, name = vtk_name))
-#             else :
-#                 list_file.append(Mouth_File(Upper = vtk , Lower= jaw_f, name = vtk_name))
-
-
-# return list_file
-
-
 class Files_vtk_json(Files):
     """
     From path folder, find landmark(json) and jaw(vtk) matche together.

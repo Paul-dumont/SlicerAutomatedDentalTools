@@ -22,13 +22,6 @@ def Crop(ScanList, InputPath, ROI_Path, OutputPath, suffix_namefile ):
             ScanOutPath = OutputPath+"/"+patient+suffix_namefile+key
 
             img = sitk.ReadImage(patient_path)
-            # size = np.array(img.GetSize())
-            # print("size of the image: ",size)
-
-            ## PADDING ##
-            # img = img.sitk.ConstantPadImageFilter()
-            # testPath = OutputPath+"/"+"paddedImage"+key
-            # sitk.WriteImage(img,testPath)
 
             print("working on patient: ",patient)
             ROI = json.load(open(ROI_Path))['markups'][0]

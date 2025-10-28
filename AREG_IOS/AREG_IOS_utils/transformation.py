@@ -195,7 +195,6 @@ def ScaleSurf(surf, mean_arr=None, scale_factor=None):
     # centering points of the shape
     if mean_arr is None:
         mean_arr = np.array(mean_v)
-    # print("Mean:", mean_arr)
     shape_points = shape_points - mean_arr
 
     # Computing scale factor if it is not provided
@@ -204,7 +203,6 @@ def ScaleSurf(surf, mean_arr=None, scale_factor=None):
         scale_factor = 1 / np.linalg.norm(bounds_max_arr - mean_arr)
 
     # scale points of the shape by scale factor
-    # print("Scale:", scale_factor)
     shape_points_scaled = np.multiply(shape_points, scale_factor)
 
     # assigning scaled points back to shape

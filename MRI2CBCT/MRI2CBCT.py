@@ -1239,11 +1239,9 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         QApplication.processEvents()
                 shutil.copyfileobj(response, out_file)
 
-            # Unzip the file
             with zipfile.ZipFile(temp_path, "r") as zip:
                 zip.extractall(out_path)
 
-            # Delete the zip file
             os.remove(temp_path)
 
         return out_path
@@ -1811,9 +1809,7 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             timer = f"Time: {int(currentTime/3600)}h, {int(currentTime%3600/60)}min and {int(currentTime%60)}s"
 
         self.ui.label_time.setText(timer)
-        # self.module_name = caller.GetModuleTitle() if self.module_name_bis is None else self.module_name_bis
         self.ui.label_info.setText(f"Extension {self.module_name} is running. \nNumber of extension runned: {self.nb_extnesion_did} / {self.nb_extension_launch}")
-        # self.displayModule = self.displayModule_bis if self.displayModule_bis is not None else self.display[self.module_name.split(' ')[0]]
         
         progress_value = caller.GetProgress()
         self.ui.progressBar.setValue(progress_value)
@@ -1834,15 +1830,11 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 print("\n\n ========= ERROR ========= \n")
                 errorText = self.process.GetErrorText()
                 print("CLI execution failed: \n \n" + errorText)
-                # error
-                # errorText = caller.GetErrorText()
-                # print("\n"+ 70*"=" + "\n\n" + errorText)
-                # print(70*"=")
+
                 self.onCancel()
 
             else:
                 print("\n\n ========= PROCESSED ========= \n")
-                # print("PROGRESS :",self.displayModule.progress)
 
                 print(self.process.GetOutputText())
                 try:
@@ -1857,7 +1849,6 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         "ModifiedEvent", self.onProcessUpdate
                     )
                     del self.list_Processes_Parameters[0]
-                    # self.displayModule.progress = 0
                 except IndexError:
                     self.OnEndProcess()
 

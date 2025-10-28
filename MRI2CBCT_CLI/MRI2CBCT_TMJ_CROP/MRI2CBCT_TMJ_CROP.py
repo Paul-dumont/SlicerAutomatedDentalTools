@@ -7,7 +7,7 @@ from typing import Optional
 from pathlib import Path
 import numpy as np
 import nibabel as nib
-from  scipy.ndimage import label         # garder la plus grosse CC
+from  scipy.ndimage import label         # Keep the biggest CC
 fpath = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(fpath)
 
@@ -17,7 +17,7 @@ from MRI2CBCT_CLI_utils import GetPatients
 DATASET      = "Dataset001_myseg"
 CONFIG       = "3d_fullres"
 PLAN         = "nnUNetResEncUNetXLPlans"
-MARGIN       = 3                          # voxels autours B-box
+MARGIN       = 3                          # voxels besides B-box
 PROBA_THR    = .5
 
 # ── OUTILS ──────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ def crop_with_affine(img: nib.Nifti1Image, start: np.ndarray, end: np.ndarray) -
     data   = img.get_fdata()
     affine = img.affine.copy()
     sub    = data[start[0]:end[0], start[1]:end[1], start[2]:end[2]]
-    affine[:3, 3] += affine[:3, :3] @ start          # décale l’origine
+    affine[:3, 3] += affine[:3, :3] @ start          # move origin
     return nib.Nifti1Image(sub, affine)
 
 def biggest_cc(mask: np.ndarray) -> np.ndarray:
@@ -156,12 +156,8 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     cbct_crop, _      = crop_by_world_corners(cbct, world_corners)
     mri_crop,  bbox_m = crop_by_world_corners(mri,  world_corners)
     
-    # _save(cbct_crop, f"{name}_CBCT_cropped.nii.gz")
     _save(mri_crop,  f"{name}_MRI_crop{side}.nii.gz")
 
-    # if seg_path and seg_path.exists():
-    #     seg_crop, _ = crop_by_world_corners(nib.load(seg_path), world_corners)
-    #     _save(seg_crop, f"{name}_CBCT_Seg_cropped.nii.gz")
 
 
     ### ------------------------------------------------------------------ ###
@@ -204,9 +200,6 @@ def main(args):
         print(f"   SEG:  {seg_path}")
 
         process_patient(cbct_path, mri_path, seg_path, tmp_folder, output_dir, model_folder)
-
-    # Optionally clean temp dir
-    # shutil.rmtree(tmp_folder)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
