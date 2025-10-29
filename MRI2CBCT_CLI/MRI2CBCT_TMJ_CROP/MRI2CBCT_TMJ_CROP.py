@@ -172,7 +172,7 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     cbct_crop, _      = crop_by_world_corners(cbct, world_corners)
     mri_crop,  bbox_m = crop_by_world_corners(mri,  world_corners)
     
-    _save(mri_crop,  f"{name}_MRI_TMJcrop{side}.nii.gz","MRI")
+    _save(mri_crop,  f"{name}_MRI_TMJ_crop{side}.nii.gz","MRI")
 
 
     ### ------------------------------------------------------------------ ###
@@ -182,11 +182,11 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
         from nibabel.processing import resample_from_to
         # cible = (shape, affine) du MRI croppé
         cbct_on_mri = resample_from_to(cbct, (mri_crop.shape, mri_crop.affine), order=1)
-        _save(cbct_on_mri, f"{name}_CBCT_TMJcrop{side}.nii.gz","CBCT")
+        _save(cbct_on_mri, f"{name}_CBCT_TMJ_crop{side}.nii.gz","CBCT")
         pred_on_mri = resample_from_to(nib.load(seg_path),
                                        (mri_crop.shape, mri_crop.affine),
                                        order=0)
-        _save(pred_on_mri, f"{name}_Seg_TMJcrop{side}.nii.gz","CBCT seg")
+        _save(pred_on_mri, f"{name}_Seg_TMJ_crop{side}.nii.gz","CBCT seg")
     print("── finished.")
 
 
