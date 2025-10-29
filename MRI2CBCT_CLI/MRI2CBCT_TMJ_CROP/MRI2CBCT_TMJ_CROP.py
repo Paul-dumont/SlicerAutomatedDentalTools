@@ -17,7 +17,8 @@ DATASET      = "Dataset001_myseg"
 CONFIG       = "3d_fullres"
 PLAN         = "nnUNetResEncUNetXLPlans"
 MARGIN       = 3                          # voxels besides B-box
-PROBA_THR    = .5
+PROBA_THR    = 0.02
+FIXED_BBOX_VOXELS = [200, 200, 200]       # set to None to disable fixed box; otherwise [sx,sy,sz] in voxels
 
 # ── OUTILS ──────────────────────────────────────────────────────────
 def crop_with_affine(img: nib.Nifti1Image, start: np.ndarray, end: np.ndarray) -> nib.Nifti1Image:
@@ -137,6 +138,18 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     nz   = np.array(np.nonzero(mask))
     pmin = np.maximum(nz.min(axis=1) - MARGIN, 0)
     pmax = np.minimum(nz.max(axis=1) + 1 + MARGIN, mask.shape)
+
+    # If a fixed box size is requested, center that box on the mask centroid
+    if FIXED_BBOX_VOXELS is not None:
+        center = np.round(nz.mean(axis=1)).astype(int)
+        size = np.array(FIXED_BBOX_VOXELS)
+        half = size // 2
+        pmin = center - half
+        pmin = np.maximum(pmin, 0)
+        pmax = pmin + size
+        # clamp to image and if clamped, re-adjust pmin to keep requested size when possible
+        pmax = np.minimum(pmax, mask.shape)
+        pmin = np.maximum(pmax - size, 0)
 
 
     ### ------------------------------------------------------------------ ###
