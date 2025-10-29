@@ -12,6 +12,7 @@ fpath = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(fpath)
 
 from MRI2CBCT_CLI_utils import GetPatients
+
 # ── CONFIG ──────────────────────────────────────────────────────────
 DATASET      = "Dataset001_myseg"
 CONFIG       = "3d_fullres"
@@ -68,12 +69,12 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
         return crop_with_affine(img, imin, imax), (imin, imax)
 
     def _save(vol: Optional[nib.Nifti1Image], file_name: str, folder_name: str):
-        if vol is None:
-            print(f"  ↳ {file_name}: intersection nulle (non sauvegardé)")
-        else:
-            if not os.path.exists(os.path.join(out_dir,folder_name)):
-                os.makedirs(os.path.join(out_dir,folder_name))
-            nib.save(vol, os.path.join(os.path.join(out_dir,folder_name),file_name))
+            if vol is None:
+                print(f"  ↳ {file_name}: intersection nulle (non sauvegardé)")
+            else:
+                if not os.path.exists(os.path.join(out_dir,folder_name)):
+                    os.makedirs(os.path.join(out_dir,folder_name))
+                nib.save(vol, os.path.join(os.path.join(out_dir,folder_name),file_name))
 
     
     ### ------------------------------------------------------------------ ###
@@ -174,7 +175,6 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     _save(mri_crop,  f"{name}_MRI_TMJcrop{side}.nii.gz","MRI")
 
 
-
     ### ------------------------------------------------------------------ ###
     
     
@@ -183,12 +183,10 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
         # cible = (shape, affine) du MRI croppé
         cbct_on_mri = resample_from_to(cbct, (mri_crop.shape, mri_crop.affine), order=1)
         _save(cbct_on_mri, f"{name}_CBCT_TMJcrop{side}.nii.gz","CBCT")
-
         pred_on_mri = resample_from_to(nib.load(seg_path),
                                        (mri_crop.shape, mri_crop.affine),
                                        order=0)
         _save(pred_on_mri, f"{name}_Seg_TMJcrop{side}.nii.gz","CBCT seg")
-
     print("── finished.")
 
 
