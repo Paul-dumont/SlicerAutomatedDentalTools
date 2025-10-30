@@ -19,7 +19,7 @@ CONFIG       = "3d_fullres"
 PLAN         = "nnUNetResEncUNetXLPlans"
 MARGIN       = 3                          # voxels besides B-box
 PROBA_THR    = 0.02
-FIXED_BBOX_VOXELS = [200, 200, 200]       # set to None to disable fixed box; otherwise [sx,sy,sz] in voxels
+FIXED_BBOX_VOXELS = [400, 400, 400]       # set to None to disable fixed box; otherwise [sx,sy,sz] in voxels
 
 # ── OUTILS ──────────────────────────────────────────────────────────
 def crop_with_affine(img: nib.Nifti1Image, start: np.ndarray, end: np.ndarray) -> nib.Nifti1Image:
@@ -132,6 +132,13 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
 
     mask = pred if pred.max() > 1 else (pred > PROBA_THR)
     mask = biggest_cc(mask)
+    # save mask for inspection (in cbct_half voxel space)
+    try:
+        mask_img = nib.Nifti1Image(mask.astype(np.uint8), cbct_half.affine)
+        _save(mask_img, f"{name}_Mask_TMJ_{side}.nii.gz", "Mask")
+    except Exception:
+        # best-effort save, do not fail the pipeline
+        pass
     if mask.sum() == 0:
         print("⚠️  no voxel — ignored")
         return
@@ -187,6 +194,13 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
                                        (mri_crop.shape, mri_crop.affine),
                                        order=0)
         _save(pred_on_mri, f"{name}_Seg_TMJ_crop{side}.nii.gz","CBCT seg")
+        # also resample and save the binary mask as a label-map on the MRI grid (nearest)
+        try:
+            mask_img = nib.Nifti1Image(mask.astype(np.uint8), cbct_half.affine)
+            mask_on_mri = resample_from_to(mask_img, (mri_crop.shape, mri_crop.affine), order=0)
+            _save(mask_on_mri, f"{name}_Mask_TMJ_crop{side}.nii.gz","CBCT seg")
+        except Exception:
+            pass
     print("── finished.")
 
 
