@@ -282,13 +282,6 @@ def main(args):
                 try:
                     image = sitk.ReadImage(scan)
                     if "mirror" in os.path.basename(matrix).lower():
-                        tfm = sitk.AffineTransform(tfm)
-                        # Center the transform around image center
-                        center = image.TransformContinuousIndexToPhysicalPoint([
-                            (sz - 1) / 2.0 for sz in image.GetSize()
-                        ])
-                        tfm.SetCenter(center)
-                        
                         local_reference = image
                     else:
                         local_reference = reference_image if reference_image is not None else image
