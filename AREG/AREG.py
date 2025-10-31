@@ -1947,24 +1947,73 @@ class AREGLogic(ScriptedLoadableModuleLogic):
 
         if platform.system() == "Windows":
             command_execute = f"source {path_activate} {self.name_env} &&"
-            for com in command :
-                command_execute = command_execute+ " "+com
+            for com in command:
+                command_execute = command_execute + " " + com
 
             user = self.conda.getUser()
-            command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-            print("command_to_execute in condaRunCommand : ",command_to_execute)
+            command_to_execute = ["wsl", "--user", user, "--", "bash", "-c", command_execute]
+            print("command_to_execute in condaRunCommand : ", command_to_execute)
 
-            self.subpro = subprocess.Popen(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-                              text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),
-                              creationflags=subprocess.CREATE_NEW_PROCESS_GROUP  # For Windows
-                              )
+            # start subprocess without blocking; capture pipes
+            self.subpro = subprocess.Popen(
+                command_to_execute,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                env=slicer.util.startupEnvironment(),
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+            )
         else:
             path_conda_exe = self.conda.getCondaExecutable()
             command_execute = f"{path_conda_exe} run -n {self.name_env}"
-            for com in command :
-                command_execute = command_execute+ " "+com
+            for com in command:
+                command_execute = command_execute + " " + com
 
-            print("command_to_execute in conda run : ",command_execute)
-            self.subpro = subprocess.Popen(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(), executable="/bin/bash", preexec_fn=os.setsid)
-    
-        self.stdout, self.stderr = self.subpro.communicate()
+            print("command_to_execute in conda run : ", command_execute)
+            # start subprocess and capture pipes
+            self.subpro = subprocess.Popen(
+                command_execute,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                env=slicer.util.startupEnvironment(),
+                executable="/bin/bash",
+                preexec_fn=os.setsid,
+            )
+
+        # Read stdout/stderr in real time and print to Slicer python console
+        try:
+            stdout = self.subpro.stdout
+            stderr = self.subpro.stderr
+
+            # Iterate until process terminates and pipes are exhausted
+            while True:
+                # Read line-by-line; non-blocking behavior is handled by readline() returning '' on EOF
+                out_line = stdout.readline() if stdout is not None else ''
+                err_line = stderr.readline() if stderr is not None else ''
+
+                if out_line:
+                    print(out_line.rstrip())
+                if err_line:
+                    print(err_line.rstrip())
+
+                # If process finished and no more output, break
+                if self.subpro.poll() is not None and (not out_line) and (not err_line):
+                    break
+
+        except Exception:
+            # Fallback: block until end and then print collected output
+            try:
+                self.stdout, self.stderr = self.subpro.communicate()
+                if self.stdout:
+                    print(self.stdout)
+                if self.stderr:
+                    print(self.stderr)
+            except Exception:
+                pass

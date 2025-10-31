@@ -101,7 +101,7 @@ def main(args):
             except Exception as e:
                 print(f"Error copying T1 matrix for {name}: {e}")
 
-        saveMatrixAsTfm(output_icp["matrix"], aso_tfm_path_T2, args.output, patient_id, args.suffix, args.areg_mode)
+            saveMatrixAsTfm(output_icp["matrix"], aso_tfm_path_T2, args.output, patient_id, args.suffix, args.areg_mode)
         
         if lower:
             surf_lower = dataset.getLowerSurf(idx, "T2")
