@@ -15,7 +15,6 @@ import os, json
 import SimpleITK as sitk
 
 
-from pkg_resources import working_set
 import dicom2nifti
 import itk
 

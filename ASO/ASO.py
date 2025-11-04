@@ -15,7 +15,10 @@ from qt import (
     QGridLayout,
     QMediaPlayer,
 )
-import pkg_resources
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin,pip_install
 from functools import partial
@@ -25,6 +28,12 @@ import textwrap
 import platform
 import signal
 
+def _get_installed_version(lib_name):
+    try:
+        return importlib_metadata.version(lib_name)
+    except importlib_metadata.PackageNotFoundError:
+        raise importlib_metadata.PackageNotFoundError
+
 from ASO_Method.IOS import Auto_IOS, Semi_IOS
 from ASO_Method.CBCT import Semi_CBCT, Auto_CBCT
 from ASO_Method.Method import Method
@@ -32,11 +41,11 @@ from ASO_Method.Progress import Display
 
 def check_lib_installed(lib_name, required_version=None):
     try:
-        installed_version = pkg_resources.get_distribution(lib_name).version
+        installed_version = _get_installed_version(lib_name)
         if required_version and installed_version != required_version:
             return False
         return True
-    except pkg_resources.DistributionNotFound:
+    except importlib_metadata.PackageNotFoundError:
         return False
 
 # import csv
