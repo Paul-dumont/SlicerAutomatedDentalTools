@@ -152,7 +152,7 @@ def process_images(mri_path, cbct_mask_path, output_folder, patient_id, mri_path
         return
 
     Transforms = []
-
+  
     try : 
         TransformObj_Fine = ElastixReg(cbct_mask_image, mri_image, initial_transform=None)
     except Exception as e:

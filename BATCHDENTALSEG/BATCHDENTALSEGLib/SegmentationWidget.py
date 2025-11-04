@@ -1066,6 +1066,8 @@ class SegmentationWidget(qt.QWidget):
 
             output_path = os.path.join(self.outputFolderPath, segNode.GetName() + ".nii.gz")
             saved = slicer.util.saveNode(tmpOut, output_path)
+            self.onExportClicked()
+
             if saved:
                 self.onProgressInfo(f"✅ Segmentation saved manually in {output_path}")
             else:

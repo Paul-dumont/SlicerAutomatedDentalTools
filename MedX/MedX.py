@@ -15,6 +15,11 @@ from qt import QFileDialog,QMessageBox,QGridLayout,QWidget,QPixmap
 from functools import partial
 import SimpleITK as sitk
 
+try:
+    from importlib.metadata import version as _get_installed_version
+except ImportError:
+    from importlib_metadata import version as _get_installed_version
+
 
 from MedX_Method.summarize import MedX_Summarize_Method
 from MedX_Method.dashboard import MedX_Dashboard_Method
@@ -28,7 +33,6 @@ import textwrap
 import platform
 import threading
 import subprocess
-import pkg_resources
 import io
 
 
@@ -39,14 +43,32 @@ def check_lib_installed(lib_name, required_version=None):
     - required_version: ">=1.10.0", "==0.7.0", "<2.0.0", etc.
     '''
     try:
+        installed_version = _get_installed_version(lib_name)
         if required_version:
-            # Use full requirement spec (e.g., "torch>=1.10.0")
-            pkg_resources.require(f"{lib_name}{required_version}")
+            # Parse version constraint and check
+            from packaging import version
+            import re
+            # Simple version constraint checking
+            op_match = re.match(r'^([<>=!]+)(.+)', required_version.strip())
+            if op_match:
+                op, req_ver = op_match.groups()
+                if op == '>=':
+                    return version.parse(installed_version) >= version.parse(req_ver)
+                elif op == '<=':
+                    return version.parse(installed_version) <= version.parse(req_ver)
+                elif op == '==':
+                    return version.parse(installed_version) == version.parse(req_ver)
+                elif op == '>':
+                    return version.parse(installed_version) > version.parse(req_ver)
+                elif op == '<':
+                    return version.parse(installed_version) < version.parse(req_ver)
+                elif op == '!=':
+                    return version.parse(installed_version) != version.parse(req_ver)
+            return True
         else:
             # Just check if it's installed
-            pkg_resources.get_distribution(lib_name)
-        return True
-    except (pkg_resources.DistributionNotFound, pkg_resources.VersionConflict) as e:
+            return True
+    except Exception as e:
         print(f"Version check failed: {e}")
         return False
 
@@ -65,7 +87,7 @@ def install_function(self,list_libs:list):
         if not check_lib_installed(lib, version_constraint):
             try:
             # check if the library is already installed
-                if pkg_resources.get_distribution(lib).version:
+                if _get_installed_version(lib):
                     libs_to_update.append((lib, version_constraint))
             except:
                 libs_to_install.append((lib, version_constraint))
@@ -77,7 +99,7 @@ def install_function(self,list_libs:list):
           #and which libraries will be installed for the first time
           if libs_to_update:
               message += "\n --- Libraries to update (version mismatch): \n"
-              message += "\n".join([f"{lib} (current: {pkg_resources.get_distribution(lib).version}) -> {version_constraint.replace('==','').replace('<=','').replace('>=','').replace('<','').replace('>','')}" for lib, version_constraint in libs_to_update])
+              message += "\n".join([f"{lib} (current: {_get_installed_version(lib)}) -> {version_constraint.replace('==','').replace('<=','').replace('>=','').replace('<','').replace('>','')}" for lib, version_constraint in libs_to_update])
               message += "\n"
           if libs_to_install:
 
