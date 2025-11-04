@@ -19,8 +19,17 @@ from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin, pip_install
 from slicer import vtkMRMLCommandLineModuleNode
 import webbrowser
-import pkg_resources
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 import importlib
+
+def _get_installed_version(lib_name):
+    try:
+        return importlib_metadata.version(lib_name)
+    except importlib_metadata.PackageNotFoundError:
+        raise importlib_metadata.PackageNotFoundError
 
 def check_lib_installed(lib_name, required_version=None,system="Windows"):
     '''
@@ -47,13 +56,13 @@ def check_lib_installed(lib_name, required_version=None,system="Windows"):
             return True
 
     try:
-        installed_version = pkg_resources.get_distribution(lib_name).version
+        installed_version = _get_installed_version(lib_name)
         # check if the version is the good one - if required_version != None it's considered as a True
         if required_version and installed_version != required_version:
           return False
         else:
           return True
-    except pkg_resources.DistributionNotFound:
+    except importlib_metadata.PackageNotFoundError:
         return False
 
 def install_function(self,list_libs:list,system:str):
@@ -68,7 +77,7 @@ def install_function(self,list_libs:list,system:str):
         if not check_lib_installed(lib, version,system):
             try:
               # check if the library is already installed
-              if pkg_resources.get_distribution(lib).version:
+              if _get_installed_version(lib):
                 libs_to_update.append((lib, version))
             except:
               libs_to_install.append((lib, version))
@@ -81,7 +90,7 @@ def install_function(self,list_libs:list,system:str):
           if libs_to_update:
 
               message += "\nLibraries to update (version mismatch):\n"
-              message += "\n".join([f"{lib} (current: {pkg_resources.get_distribution(lib).version}) -> {version}" for lib, version in libs_to_update])
+              message += "\n".join([f"{lib} (current: {_get_installed_version(lib)}) -> {version}" for lib, version in libs_to_update])
 
           if libs_to_install:
               message += "\nLibraries to install:\n"
