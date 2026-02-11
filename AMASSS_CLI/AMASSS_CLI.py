@@ -83,7 +83,7 @@ def SavePredToVTK(file_path, temp_folder, smoothing, vtk_output_path, model_size
         w.SetFileName(outvtk)
         w.SetInputData(poly)
         w.Write()
-        print(f" → Written VTK: {outvtk}", flush=True)
+        print(f" -> Written VTK: {outvtk}", flush=True)
 
     # --- UTIL : build + smooth + color ---
     def mesh_from_nrrd(nrrd, iters, color_rgb):
@@ -222,7 +222,7 @@ def SaveSeg(file_path, spacing ,seg_arr, input_path,temp_path, outputdir,temp_fo
 
     if save_vtk:
         SavePredToVTK(file_path,temp_folder, smoothing, vtk_output_path=outputdir)
-# ── Main adapté nnUNet v2 ─────────────────────────────────────────────────────
+# -- Main adapté nnUNet v2 ---
 def main(args):
     import os, sys, glob, subprocess, shutil, time
     import numpy as np
@@ -309,10 +309,10 @@ def main(args):
 
             checkpoint = os.path.join(plans_dir, "fold_0", "checkpoint_final.pth")
             if not os.path.isfile(checkpoint):
-                sys.exit(f"❌ No model checkpoint found for {struct} in {checkpoint}")
+                sys.exit(f"ERROR: No model checkpoint found for {struct} in {checkpoint}")
 
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            print(f"  → Predicting {struct} on {device}", flush=True)
+            print(f"  -> Predicting {struct} on {device}", flush=True)
             cmd = [
                 "nnUNetv2_predict",
                 "-i", tmp,
