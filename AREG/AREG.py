@@ -26,6 +26,7 @@ import platform
 import signal
 import threading
 import subprocess
+import platform
 import re
 
 
@@ -1552,6 +1553,9 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     """
     
     def onCheckRequirements(self):
+        # Accept Conda ToS to prevent blocking errors
+        self.logic.accept_conda_tos()
+        
         if not self.logic.isCondaSetUp:
             messageBox = qt.QMessageBox()
             text = textwrap.dedent("""
@@ -1837,6 +1841,38 @@ class AREGLogic(ScriptedLoadableModuleLogic):
         self.process = threading.Thread(target=target, args=command) #run in parallel to not block slicer
         self.process.start()
         
+    def accept_conda_tos(self):
+        '''
+        Automatically accept Conda Terms of Service to prevent blocking errors
+        '''
+        try:
+            if platform.system() == "Windows":
+                # For Windows with WSL, use the same format as other conda commands
+                conda_exe = self.conda.getCondaExecutable()
+                user = self.conda.getUser()
+                
+                cmd1 = ["wsl", "--user", user, "--", "bash", "-c", f"{conda_exe} tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main"]
+                subprocess.run(cmd1, capture_output=True, timeout=10)
+                
+                cmd2 = ["wsl", "--user", user, "--", "bash", "-c", f"{conda_exe} tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r"]
+                subprocess.run(cmd2, capture_output=True, timeout=10)
+                print("Conda ToS accepted for Windows WSL")
+            else:
+                # For Linux/Mac
+                subprocess.run(
+                    ['conda', 'tos', 'accept', '--override-channels', '--channel', 'https://repo.anaconda.com/pkgs/main'],
+                    capture_output=True,
+                    timeout=10
+                )
+                subprocess.run(
+                    ['conda', 'tos', 'accept', '--override-channels', '--channel', 'https://repo.anaconda.com/pkgs/r'],
+                    capture_output=True,
+                    timeout=10
+                )
+                print("Conda ToS accepted for Linux/Mac")
+        except Exception as e:
+            print(f"Warning: Could not accept Conda ToS: {e}")
+    
     def install_shapeaxi(self):
         self.run_conda_command(target=self.conda.condaCreateEnv, command=(self.name_env,self.python_version,["shapeaxi==1.1.1"],)) #run in parallel to not block slicer
         
@@ -1846,16 +1882,10 @@ class AREGLogic(ScriptedLoadableModuleLogic):
         return self.conda.condaRunCommand(command)
     
     def install_pytorch3d(self):
-        result_pythonpath = self.check_pythonpath_windows("AREG_Method.install_pytorch")
-        if not result_pythonpath :
-            self.give_pythonpath_windows()
-            result_pythonpath = self.check_pythonpath_windows("AREG_Method.install_pytorch")
-        
-        if result_pythonpath : 
-            conda_exe = self.conda.getCondaExecutable()
-            path_pip = self.conda.getCondaPath()+f"/envs/{self.name_env}/bin/pip"
-            command = [conda_exe, "run", "-n", self.name_env, "python" ,"-m", f"AREG_Method.install_pytorch",path_pip]
-
+        """Install pytorch3d via conda from conda-forge channel"""
+        conda_exe = self.conda.getCondaExecutable()
+        # Install pytorch3d from conda-forge which is more reliable
+        command = [conda_exe, "install", "-n", self.name_env, "-y", "pytorch3d", "-c", "conda-forge"]
         self.run_conda_command(target=self.conda.condaRunCommand, command=(command,))
         
     def setup_cli_command(self):
@@ -1891,6 +1921,9 @@ class AREGLogic(ScriptedLoadableModuleLogic):
         conda_exe = self.conda.getCondaExecutable()
         command = [conda_exe, "run", "-n", self.name_env, "python" ,"-c", f"\"import {file} as check;import os; print(os.path.isfile(check.__file__))\""]
         result = self.conda.condaRunCommand(command)
+        if "CondaToSNonInteractiveError" in result or "Terms of Service" in result:
+            print(f"Error: Conda Terms of Service not accepted. Please run: conda tos accept --override-channels")
+            return False
         if "True" in result :
             return True
         return False
