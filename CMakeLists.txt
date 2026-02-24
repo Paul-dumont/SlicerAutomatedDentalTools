@@ -46,6 +46,8 @@ add_subdirectory(BATCHDENTALSEG)
 add_subdirectory(DOCShapeAXI)
 add_subdirectory(DOCShapeAXI_CLI)
 add_subdirectory(CLIC)
+add_subdirectory(CNE_UI)
+add_subdirectory(CNE_CLI)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------
