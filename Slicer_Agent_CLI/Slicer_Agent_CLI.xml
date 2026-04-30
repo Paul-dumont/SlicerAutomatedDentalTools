@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<executable>
+  <title>Slicer_Agent_CLI</title>
+  <category>Examples</category>
+  <description><![CDATA[Template to print message]]></description>
+  <version>0.1.0</version>
+
+  <parameters>
+
+    <label>IO</label>
+    <description><![CDATA[Input/output parameters]]></description>
+
+    <string>
+      <name>msg</name>
+      <label>msg</label>
+      <index>0</index>
+      <description>Message to print</description>
+    </string>
+
+  </parameters>
+</executable>

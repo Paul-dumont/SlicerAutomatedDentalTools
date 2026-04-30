@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Slicer_Agent</class>
+ <widget class="qMRMLWidget" name="Slicer_Agent">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>325</width>
+    <height>311</height>
+   </rect>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout">
+
+   <item>
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Enter message :</string>
+     </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QLineEdit" name="lineEdit">
+    <property name="text">
+     <string>Hello</string>
+    </property>
+    <property name="SlicerParameterName">
+     <string>msg</string>
+    </property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QPushButton" name="applyButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="toolTip">
+      <string>Run the algorithm.</string>
+     </property>
+     <property name="text">
+      <string>Apply</string>
+     </property>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <customwidgets></customwidgets>
+</ui>
