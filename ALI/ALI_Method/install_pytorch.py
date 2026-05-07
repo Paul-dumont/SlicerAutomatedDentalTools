@@ -10,33 +10,50 @@ import sys
 import subprocess
 import platform
 import shutil
+import logging
 from pathlib import Path
+
+# --- LOGGING CONFIGURATION ---
+logger = logging.getLogger("ALI_pytorch_installation")
+logger.setLevel(logging.INFO)
+
+logger.propagate = False
+
+if logger.handlers:
+    logger.handlers.clear()
+
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 def run_command(cmd, shell=False, check=True, env=None):
     """Run a command and return the result"""
-    print(f"[CMD] {' '.join(cmd) if isinstance(cmd, list) else cmd}")
+    logger.info(f"Executing command: {' '.join(cmd) if isinstance(cmd, list) else cmd}")
     try:
         result = subprocess.run(cmd, shell=shell, check=check, 
                               capture_output=True, text=True, env=env)
         if result.stdout:
-            print(result.stdout)
+            logger.info(result.stdout)
         return result
     except subprocess.CalledProcessError as e:
-        print(f"[ERROR] Command failed: {e}")
+        logger.error(f"Command failed: {e}")
         if e.stderr:
-            print(f"[STDERR] {e.stderr}")
+            logger.error(f"Error output: {e.stderr}")
         if check:
             raise
         return e
 
 def find_conda_executable():
     """Find the conda executable in the current environment"""
-    print("[INFO] Looking for conda executable...")
+    logger.info("Looking for conda executable...")
     
     # Method 1: Check if conda is directly available
     conda_cmd = shutil.which("conda")
     if conda_cmd:
-        print(f"[INFO] Found conda in PATH: {conda_cmd}")
+        logger.info(f"Found conda in PATH: {conda_cmd}")
         return conda_cmd
     
     # Method 2: Check environment variables
@@ -50,7 +67,7 @@ def find_conda_executable():
         
         for path in possible_paths:
             if path.exists():
-                print(f"[INFO] Found conda via CONDA_PREFIX: {path}")
+                logger.info(f"Found conda via CONDA_PREFIX: {path}")
                 return str(path)
     
     # Method 3: Relative to Python executable (for Slicer environments)
@@ -64,7 +81,7 @@ def find_conda_executable():
     
     for path in possible_paths:
         if path.exists():
-            print(f"[INFO] Found conda relative to Python: {path}")
+            logger.info(f"Found conda relative to Python: {path}")
             return str(path)
     
     # Method 4: Check common installation paths
@@ -78,10 +95,10 @@ def find_conda_executable():
     
     for path in common_paths:
         if Path(path).exists():
-            print(f"[INFO] Found conda in common location: {path}")
+            logger.info(f"Found conda in common location: {path}")
             return path
     
-    print("[WARNING] Could not find conda executable")
+    logger.warning("Could not find conda executable")
     return None
 
 def install_cuda_toolkit():

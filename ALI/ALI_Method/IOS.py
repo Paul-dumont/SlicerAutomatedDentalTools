@@ -8,6 +8,24 @@ import vtk
 import shutil
 import platform
 import csv
+import logging
+import sys
+
+# --- LOGGING CONFIGURATION ---
+logger = logging.getLogger("ALI_IOS_Process")
+logger.setLevel(logging.INFO)
+
+logger.propagate = False
+
+if logger.handlers:
+    logger.handlers.clear()
+
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 class Auto_IOS(Method):
@@ -180,7 +198,7 @@ class Auto_IOS(Method):
             if self.__isSegmented__(file):
                 name, ext = os.path.splitext(base_name)
                 new_name = f"{name}_Seg{ext}"
-                print("new_name : ",new_name)
+                logger.debug(f"Processing file: {new_name}")
                 shutil.copy(file, os.path.join(folder_bypass, new_name))
 
             else:
@@ -210,7 +228,7 @@ class Auto_IOS(Method):
         if True in [label in properties for label in list_label]:
             out = True
 
-        print("segmented", out, path)
+        logger.debug(f"File segmented: {out}, Path: {path}")
         return out
 
     def Process(self, **kwargs):
@@ -269,11 +287,11 @@ class Auto_IOS(Method):
             "log_path": kwargs["logPath"],
         }
 
-        print('-' * 70)
-        print("parameter seg", parameter_segteeth)
-        print('-' * 70)
-        print("parameter ali : ", parameter_ali)
-        print('-' * 70)
+        logger.debug("=" * 70)
+        logger.debug(f"Segmentation parameters: {parameter_segteeth}")
+        logger.debug("=" * 70)
+        logger.debug(f"Landmark parameters: {parameter_ali}")
+        logger.debug("=" * 70)
 
         SegProcess = slicer.modules.crownsegmentationcli
         LandmarkProcess = slicer.modules.ali_ios
