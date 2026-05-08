@@ -25,6 +25,20 @@ from torchvision.models.detection import maskrcnn_resnet50_fpn
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
 
+import sys
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("CLIC_runner")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 # ───────────────────────── helpers ──────────────────────────────────────────
 def _blank_model(nc: int):
@@ -41,9 +55,9 @@ def _norm(x2d: np.ndarray) -> np.ndarray:
     return (x2d - lo) / (hi - lo) if hi - lo > 1e-8 else np.zeros_like(x2d)
 
 
-log      = lambda s: print(f"[LOG] {s}",      flush=True)
-progress = lambda p: print(f"[PROGRESS] {p}", flush=True)
-seg_out  = lambda p: print(f"[SEG] {p}",      flush=True)
+log      = lambda s: logger.info(f"[LOG] {s}",      flush=True)
+progress = lambda p: logger.info(f"[PROGRESS] {p}", flush=True)
+seg_out  = lambda p: logger.info(f"[SEG] {p}",      flush=True)
 
 
 # ───────────────────────── main ─────────────────────────────────────────────
