@@ -1,5 +1,3 @@
-
-import logging
 import os,sys,time,zipfile,urllib.request,shutil
 
 import vtk
@@ -968,7 +966,7 @@ QSlider::handle:horizontal:hover {
 
         stopTime = time.time()
 
-        logging.info(f"Processing completed in {stopTime-self.startTime:.2f} seconds")
+        logger.info(f"Processing completed in {stopTime-self.startTime:.2f} seconds")
 
         s = PopUpWindow(
             title="Process Done",

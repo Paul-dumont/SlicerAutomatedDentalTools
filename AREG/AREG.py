@@ -1,4 +1,4 @@
-import os, sys, time, logging, zipfile, urllib.request, shutil, glob
+import os, sys,logging, time, zipfile, urllib.request, shutil, glob
 import vtk, qt, slicer
 from qt import (
     QWidget,
@@ -1108,7 +1108,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             # Guard: if Process() returned an empty list, log and return to avoid IndexError
             if not self.list_Processes_Parameters:
-                logging.error("list_Processes_Parameters is empty after calling ActualMeth.Process()")
+                logger.error("list_Processes_Parameters is empty after calling ActualMeth.Process()")
                 return
 
             self.nb_extension_launch = len(self.list_Processes_Parameters)
@@ -1117,7 +1117,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             try:
                 self.module_name = self.list_Processes_Parameters[0]["Module"]
             except Exception:
-                logging.exception("Exception while accessing first process entry")
+                logger.exception("Exception while accessing first process entry")
                 return
             # /!\ Launch of the first process /!\
             logger.info(f"Module name: {self.module_name}")
@@ -1160,7 +1160,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                             try:
                                 self.OnEndProcess()
                             except Exception:
-                                logging.exception("OnEndProcess failed after conda run")
+                                logger.exception("OnEndProcess failed after conda run")
                             return
               
 
@@ -1299,7 +1299,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         stopTime = time.time()
 
-        logging.info(f"Processing completed in {stopTime-self.startTime:.2f} seconds")
+        logger.info(f"Processing completed in {stopTime-self.startTime:.2f} seconds")
 
         s = PopUpWindow(
             title="Process Done",

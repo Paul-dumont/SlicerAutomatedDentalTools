@@ -12,6 +12,19 @@ import sys
 from pathlib import Path
 from enum import Flag, auto
 import qt
+import sys
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("VFACE_segmentation_logic")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 # Désactiver les warnings VTK
 vtk.vtkObject.GlobalWarningDisplayOff()
@@ -77,18 +90,6 @@ class SegmentationLogic:
         self.selectedModel = "DentalSegmentator"
         self.selectedDevice = "cuda"
         self.exportFormats = ExportFormat.STL | ExportFormat.NIFTI
-        
-        self._setup_logging()
-    
-    def _setup_logging(self):
-        """Journalisation dans un fichier pour débogage post-crash."""
-        log_path = Path.home() / "slicer_segmentation.log"
-        logging.basicConfig(
-            filename=str(log_path),
-            level=logging.DEBUG,
-            format="%(asctime)s - %(levelname)s - %(message)s"
-        )
-        logging.info("===== New Segmentation Logic Session Started =====")
     
     def setInputFolder(self, folderPath):
         """Définit le dossier d'entrée contenant les volumes"""
@@ -121,14 +122,12 @@ class SegmentationLogic:
     
     def log_info(self, message):
         """Log d'information"""
-        print(f"[SEGMENTATION] {message}")
-        logging.info(message)
+        logger.info(f"[SEGMENTATION] {message}")
         self.fullInfoLogs.append(message)
     
     def log_error(self, message):
         """Log d'erreur"""
-        print(f"[ERROR] {message}")
-        logging.error(message)
+        logger.error(f"[ERROR] {message}")
         self.fullInfoLogs.append(f"ERROR: {message}")
     
     def processAllFiles(self):

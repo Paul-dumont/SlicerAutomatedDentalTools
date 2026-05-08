@@ -2219,7 +2219,7 @@ class MRI2CBCTLogic(ScriptedLoadableModuleLogic):
         import time
 
         startTime = time.time()
-        logging.info("Processing started")
+        logger.info("Processing started")
 
         # Compute the thresholded output volume using the "Threshold Scalar Volume" CLI module
         cliParams = {
@@ -2233,7 +2233,7 @@ class MRI2CBCTLogic(ScriptedLoadableModuleLogic):
         slicer.mrmlScene.RemoveNode(cliNode)
 
         stopTime = time.time()
-        logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
+        logger.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
 
 
 #

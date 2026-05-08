@@ -4,10 +4,19 @@ from typing import Annotated
 import urllib.request
 import shutil
 import zipfile
+import sys
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# ===== Logging Configuration =====
+logger = logging.getLogger("VFACE")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 import importlib
 try:
@@ -818,13 +827,13 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         folder_name=os.path.join(name, subfolder_name),
                     )
             else:
-                print(f"Warning: Unknown type for {name}: {type(url_or_dict)}")
+                logger.warning(f"Warning: Unknown type for {name}: {type(url_or_dict)}")
             
     def DownloadUnzip(self, url, directory, folder_name=None, num_downl=1, total_downloads=1):
 
         out_path = os.path.join(directory, folder_name)
         if not os.path.exists(out_path):
-            print("Downloading {}...".format(folder_name.split(os.sep)[-1]))
+            logger.info("Downloading {}...".format(folder_name.split(os.sep)[-1]))
             os.makedirs(out_path)
 
             temp_path = os.path.join(directory, "temp.zip")
@@ -872,7 +881,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # Delete the zip file
             os.remove(temp_path)
 
-            print(f"{folder_name} has been successfully installed")
+            logger.info(f"{folder_name} has been successfully installed")
 
     def CheckDependency(self) -> None:
         """
@@ -925,7 +934,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onComboBoxChanged(self, text):
         """Called when the main comboBox value changes"""
-        print(f"ComboBox changed to: {text}")
+        logger.info(f"ComboBox changed to: {text}")
 
     def onComboBox2Changed(self, text):
         
@@ -1245,11 +1254,11 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         )
         
         if is_slicer_module:
-            print(f"{self.module_name} is executed.")
+            logger.info(f"{self.module_name} is executed.")
             self.cliNode = slicer.cli.run(process, None, parameters)
             self.addObserver(self.cliNode, vtk.vtkCommand.ModifiedEvent, self.onCliUpdated)
         else:
-            print(f"{self.module_name} is executed.")
+            logger.info(f"{self.module_name} is executed.")
             self.ui.label_3.setText(f"Process : {self.module_name} ({self.ActualProcess}/{self.NumberProcess})")
             
             # Pour les processus Python longs, utiliser un timer pour maintenir la réactivité
@@ -1267,15 +1276,15 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             if callable(self.python_process):
                 # Exécuter le processus
                 result = self.python_process(**self.python_parameters)
-                print(f"Result of {self.module_name}: {result}")
+                logger.info(f"Result of {self.module_name}: {result}")
                 self.python_process_completed = True
             else:
-                print(f"Error: {self.python_process} is not a callable function")
+                logger.error(f"Error: {self.python_process} is not a callable function")
                 self.python_process_error = "Process is not callable"
                 self.python_process_completed = True
                 
         except Exception as e:
-            print(f"Error during the execution of {self.module_name}: {e}")
+            logger.error(f"Error during the execution of {self.module_name}: {e}")
             import traceback
             traceback.print_exc()
             self.python_process_error = str(e)
@@ -1295,7 +1304,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             qt.QTimer.singleShot(100, self.checkPythonProcessStatus)
 
     def onProcessCompleted(self):
-        print("\n\n ========= PROCESSED ========= \n")
+        logger.info("\n\n ========= PROCESSED ========= \n")
 
         if self.shouldPauseAfterProcess(self.current_process_info) and self.ui.checkBox_2.isChecked():
             output_path = self.getOutputPathForModule(self.module_name)
@@ -1305,7 +1314,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     self.current_output_to_load = output_path
                     self.ui.continueButton.setVisible(True)
                     self.ui.label_3.setText(f"Result of {self.module_name} loaded - Click on Continue to start next steps")
-                    print(f"Process on pause after {self.module_name}. Result loaded.")
+                    logger.info(f"Process on pause after {self.module_name}. Result loaded.")
                     return
 
         try:
@@ -1328,8 +1337,8 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             self.removeObserver(cliNode, vtk.vtkCommand.ModifiedEvent, self.onCliUpdated)
 
-            print("\n\n ========= PROCESSED ========= \n")
-            print(caller.GetOutputText())
+            logger.info("\n\n ========= PROCESSED ========= \n")
+            logger.info(caller.GetOutputText())
             
             if self.shouldPauseAfterProcess(self.current_process_info) and self.ui.checkBox_2.isChecked():
                 output_path = self.getOutputPathForModule(self.module_name)
@@ -1339,7 +1348,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         self.current_output_to_load = output_path
                         self.ui.continueButton.setVisible(True)
                         self.ui.label_3.setText(f"Result of {self.module_name} loaded - Click on Continue to start next steps")
-                        print(f"Process on pause after {self.module_name}. Result loaded.")
+                        logger.info(f"Process on pause after {self.module_name}. Result loaded.")
                         self.ui.progressBar.setValue(0)
                         return
             
