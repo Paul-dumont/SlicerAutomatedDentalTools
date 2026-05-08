@@ -17,6 +17,21 @@ import json
 # Slicer-Conda helper
 from CondaSetUp import CondaSetUpCall
 
+import sys
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("CLIC")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
 # ───────────────────────────────────────────────────────────────────────────
 def _ui_log(q: queue.Queue, msg: str):
     q.put(("log", msg))
@@ -52,43 +67,43 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         
         def fixed_getCondaExecutable():
             path = original_getCondaExecutable()
-            print(f"[DEBUG] original getCondaExecutable returned: {path!r}")
+            logger.debug(f"[DEBUG] original getCondaExecutable returned: {path!r}")
             
             # Fix duplicate /bin/bin
             if path and "/bin/bin/" in path:
                 path = path.replace("/bin/bin/", "/bin/")
-                print(f"[DEBUG] Fixed duplicate /bin/bin → {path!r}")
+                logger.debug(f"[DEBUG] Fixed duplicate /bin/bin → {path!r}")
             
             # Check if path exists
             if path and os.path.exists(path):
-                print(f"[DEBUG] Conda executable exists: {path}")
+                logger.debug(f"[DEBUG] Conda executable exists: {path}")
                 return path
             
             # Try to find conda in PATH
             import shutil
             conda_in_path = shutil.which("conda")
             if conda_in_path and os.path.exists(conda_in_path):
-                print(f"[DEBUG] Using system conda from PATH: {conda_in_path}")
+                logger.debug(f"[DEBUG] Using system conda from PATH: {conda_in_path}")
                 return conda_in_path
             
             # Last resort: try common anaconda location
             common_conda = "/home/luciacev/anaconda3/bin/conda"
             if os.path.exists(common_conda):
-                print(f"[DEBUG] Using anaconda conda: {common_conda}")
+                logger.debug(f"[DEBUG] Using anaconda conda: {common_conda}")
                 return common_conda
             
-            print(f"[WARNING] Could not find working conda, falling back to: {path}")
+            logger.warning(f"[WARNING] Could not find working conda, falling back to: {path}")
             return path
         
         def fixed_getCondaPath():
             """Return conda base directory - patch Slicer bug and use system conda"""
             path = original_getCondaPath()
-            print(f"[DEBUG] original getCondaPath returned: {path!r}")
+            logger.debug(f"[DEBUG] original getCondaPath returned: {path!r}")
             
             # If we found anaconda, use its path
             common_conda_path = "/home/luciacev/anaconda3"
             if os.path.exists(common_conda_path):
-                print(f"[DEBUG] Using anaconda conda path: {common_conda_path}")
+                logger.debug(f"[DEBUG] Using anaconda conda path: {common_conda_path}")
                 return common_conda_path
             
             return path
@@ -142,69 +157,69 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def _ensure_env(self) -> bool:
         # DEBUG: entrée dans la fonction
-        print(f"[DEBUGG] _ensure_env called, name_env='{self.name_env}'")
+        logger.debug(f"[DEBUGG] _ensure_env called, name_env='{self.name_env}'")
 
         # 1) create/test env
         exists_before = self.conda.condaTestEnv(self.name_env)
-        print(f"[DEBUG] condaTestEnv('{self.name_env}') before creation → {exists_before!r}")
+        logger.debug(f"[DEBUG] condaTestEnv('{self.name_env}') before creation → {exists_before!r}")
         if not exists_before:
             self.sig.log.emit(f"[Conda] Creating env '{self.name_env}'…")
-            print(f"[DEBUG] calling condaCreateEnv({self.name_env}, '3.9', ['numpy<2.0.0','scipy','nibabel','requests'])")
+            logger.debug(f"[DEBUG] calling condaCreateEnv({self.name_env}, '3.9', ['numpy<2.0.0','scipy','nibabel','requests'])")
             self.conda.condaCreateEnv(self.name_env, "3.9", ["numpy<2.0.0","scipy","nibabel","requests"])
             exists_after = self.conda.condaTestEnv(self.name_env)
-            print(f"[DEBUG] condaTestEnv('{self.name_env}') after creation → {exists_after!r}")
+            logger.debug(f"[DEBUG] condaTestEnv('{self.name_env}') after creation → {exists_after!r}")
             if not exists_after:
                 self.sig.log.emit("❌ env creation failed")
-                print("[DEBUG] env creation failed, aborting")
+                logger.debug("[DEBUG] env creation failed, aborting")
                 return False
             self.sig.log.emit("✔ env created")
-            print("[DEBUG] env created successfully")
+            logger.debug("[DEBUG] env created successfully")
         else:
             self.sig.log.emit(f"✔ env '{self.name_env}' exists")
-            print(f"[DEBUG] env '{self.name_env}' already exists, skipping creation")
+            logger.debug(f"[DEBUG] env '{self.name_env}' already exists, skipping creation")
 
         # 2) install torch/cu118 first
-        print("[DEBUG] about to install torch/cu118 via condaRunCommand")
+        logger.debug("[DEBUG] about to install torch/cu118 via condaRunCommand")
         rc = self.conda.condaRunCommand([
             "python", "-m", "pip", "install", "--no-cache-dir",
             "--index-url=https://download.pytorch.org/whl/cu118",
             "torch==2.6.0", "torchvision==0.21.0", "torchaudio==2.6.0"
         ], self.name_env)
         self.sig.log.emit(f"[DEBUG] torch pip rc={rc!r}")
-        print(f"[DEBUG] torch install returned → {rc!r}")
+        logger.debug(f"[DEBUG] torch install returned → {rc!r}")
         if isinstance(rc, int) and rc != 0:
             self.sig.log.emit("❌ torch install failed")
-            print("[DEBUG] torch install failed (int rc)")
+            logger.debug("[DEBUG] torch install failed (int rc)")
             return False
         if isinstance(rc, str) and any(err in rc.lower() for err in ("error","failed")):
             self.sig.log.emit("❌ torch install failed")
-            print("[DEBUG] torch install failed (string rc)")
+            logger.debug("[DEBUG] torch install failed (string rc)")
             return False
         self.sig.log.emit("✔ torch installed")
-        print("[DEBUG] torch installed successfully")
+        logger.debug("[DEBUG] torch installed successfully")
 
         # 3) downgrade numpy <2.0 for compatibility
         self.sig.log.emit("→ pip install numpy<2.0 for NumPy 1.x compatibility")
-        print("[DEBUG] about to downgrade numpy with condaRunCommand")
+        logger.debug("[DEBUG] about to downgrade numpy with condaRunCommand")
         rc2 = self.conda.condaRunCommand([
             "python", "-m", "pip", "install", "--no-cache-dir", "'numpy<2.0'"
         ], self.name_env)
         self.sig.log.emit(f"[DEBUG] numpy downgrade rc={rc2!r}")
-        print(f"[DEBUG] numpy downgrade returned → {rc2!r}")
+        logger.debug(f"[DEBUG] numpy downgrade returned → {rc2!r}")
         if isinstance(rc2, int) and rc2 != 0:
             self.sig.log.emit("❌ numpy downgrade failed")
-            print("[DEBUG] numpy downgrade failed (int rc2)")
+            logger.debug("[DEBUG] numpy downgrade failed (int rc2)")
             return False
         if isinstance(rc2, str) and any(err in rc2.lower() for err in ("error","failed")):
             self.sig.log.emit("❌ numpy downgrade failed")
-            print("[DEBUG] numpy downgrade failed (string rc2)")
+            logger.debug("[DEBUG] numpy downgrade failed (string rc2)")
             return False
 
         # env ready
         self._env_ready = True
         self.sig.progress.emit(100)
         self.sig.log.emit("✔ env ready")
-        print("[DEBUG] _ensure_env succeeded, env ready")
+        logger.debug("[DEBUG] _ensure_env succeeded, env ready")
         return True
 
 

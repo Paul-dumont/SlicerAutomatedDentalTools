@@ -41,6 +41,20 @@ import subprocess
 from functools import partial
 from pathlib import Path
 
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("FlexReg")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
 def _get_installed_version(lib_name):
     try:
         return importlib_metadata.version(lib_name)
@@ -798,7 +812,7 @@ class FlexRegLogic(ScriptedLoadableModuleLogic):
         
         parameters["lower_arch"] = self.lower_arch
 
-        print("Running FlexReg_CLI with parameters:", parameters)
+        logger.info("Running FlexReg_CLI with parameters:", parameters)
 
         flybyProcess = slicer.modules.flexreg_cli
         self.cliNode = slicer.cli.run(flybyProcess,None, parameters)  
@@ -939,7 +953,7 @@ class FlexRegLogic(ScriptedLoadableModuleLogic):
 
             user = self.conda.getUser()
             command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-            print("command_to_execute in condaRunCommand : ",command_to_execute)
+            logger.info("command_to_execute in condaRunCommand : ",command_to_execute)
 
             self.subpro = subprocess.Popen(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                                     text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),
@@ -951,7 +965,7 @@ class FlexRegLogic(ScriptedLoadableModuleLogic):
             for com in command :
                 command_execute = command_execute+ " "+com
 
-            print("command_to_execute in conda run : ",command_execute)
+            logger.info("command_to_execute in conda run : ",command_execute)
             self.subpro = subprocess.Popen(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(), executable="/bin/bash", preexec_fn=os.setsid)
     
         self.stdout, self.stderr = self.subpro.communicate()
@@ -1666,7 +1680,6 @@ class WidgetParameter:
         if not FlexRegBootManager.booted:
             check_env = self.onCheckRequirements()
             is_installed = False
-            print(check_env)
             if check_env:
                 if platform.system() == "Windows":
                     list_libs_windows = [('numpy',"<2.0.0",None),('itk',None,None),('torch','2.6.0',None),('monai','==0.7.0',None)] #(lib_name, version, url)
@@ -1841,7 +1854,7 @@ class WidgetParameter:
             slicer.util.downloadFile(url, modelFilePath)
 
         # Now you can use the downloaded model file path as needed
-        print("Model file downloaded to:", modelFilePath)
+        logger.info("Model file downloaded to:", modelFilePath)
         return modelFilePath
     
     def checkSegmentation(self)->bool:

@@ -20,6 +20,21 @@ from .Utils import (
     setConventionalWideScreenView,
     setBoxAndTextVisibilityOnThreeDViews,
 )
+import sys
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("BatchDentalSeg_SegmentationWidget")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+
 vtk.vtkObject.GlobalWarningDisplayOff()
 # ─── Model descriptions ──────────────────────────────────────────────────────
 
@@ -294,7 +309,6 @@ class SegmentationWidget(qt.QWidget):
 
         # connecter logique NNUNet
         self._connectSegmentationLogic()
-        self._setup_logging()  # Initialisation des logs
         self._last_save_state = {}  # Sauvegarde de l'état
         self._timeout_timer = qt.QTimer()  # Timeout forcé
         self._timeout_timer.timeout.connect(self._emergency_stop)
@@ -304,25 +318,15 @@ class SegmentationWidget(qt.QWidget):
         self._fallbackCheckAttempts = 0
         self._fallbackLastOutputSize = None
 
-    def _setup_logging(self):
-        """Journalisation dans un fichier pour débogage post-crash."""
-        log_path = Path.home() / "slicer_segmentation.log"
-        logging.basicConfig(
-            filename=str(log_path),
-            level=logging.DEBUG,
-            format="%(asctime)s - %(levelname)s - %(message)s"
-        )
-        logging.info("===== New Session Started =====")
-
     def _checkpoint(self, name):
         """Marqueur de progression pour le débogage."""
-        logging.debug(f"CHECKPOINT: {name}")
-        print(f"[DEBUG] Checkpoint: {name}")
+        logger.debug(f"CHECKPOINT: {name}")
+        logger.debug(f"[DEBUG] Checkpoint: {name}")
         slicer.app.processEvents()  # Force le traitement des événements
 
     def _emergency_stop(self):
         """Arrêt d'urgence en cas de blocage."""
-        logging.error("EMERGENCY STOP TRIGGERED (Timeout)")
+        logger.error("EMERGENCY STOP TRIGGERED (Timeout)")
         self._save_state_before_crash()
         self.onStopClicked()
         raise RuntimeError("Processing timeout after 5 minutes")
@@ -335,7 +339,7 @@ class SegmentationWidget(qt.QWidget):
             "memory_usage": self._get_memory_usage(),
             "scene_nodes": list(slicer.util.getNodes().keys())
         }
-        logging.critical(f"CRASH STATE DUMP: {self._last_save_state}")
+        logger.critical(f"CRASH STATE DUMP: {self._last_save_state}")
 
     def _get_memory_usage(self):
         """Retourne l'utilisation mémoire actuelle."""
@@ -677,11 +681,8 @@ class SegmentationWidget(qt.QWidget):
         slicer.util.pip_install("numexpr>=2.10.2")
         packages = ["numpy<2.0", "numexpr>=2.10.2","psutil"]
 
-        _log = logging.getLogger("BATCHDENTALSEG")
-
         def _onLine(line: str):
             self.currentInfoTextEdit.append(line)    # QTextEdit
-            _log.info(line)   
 
         def _onFinished(ok: bool):
             if not ok:
@@ -748,7 +749,7 @@ class SegmentationWidget(qt.QWidget):
                 return
             self._updateBatchCounter(show_file_name=True)
             filePath = self.folderFiles[self.currentFileIndex]
-            logging.info(f"Processing file {self.currentFileIndex + 1}/{len(self.folderFiles)}: {filePath}")
+            logger.info(f"Processing file {self.currentFileIndex + 1}/{len(self.folderFiles)}: {filePath}")
 
             loadedVolume = slicer.util.loadVolume(str(filePath))
             self.onProgressInfo(f"Loaded volume: {loadedVolume.GetName()}")
@@ -758,7 +759,7 @@ class SegmentationWidget(qt.QWidget):
             self.onApplyClickedForVolume(loadedVolume)
 
         except Exception as e:
-            logging.error(f"CRASH during processNextFile: {str(e)}", exc_info=True)
+            logger.error(f"CRASH during processNextFile: {str(e)}", exc_info=True)
             self._save_state_before_crash()
             slicer.util.errorDisplay(f"Crash detected: {str(e)}\nSee logs in {Path.home()}/slicer_segmentation.log")
             raise
@@ -955,7 +956,7 @@ class SegmentationWidget(qt.QWidget):
             self.onProgressInfo("[DEBUG][SegWidget] onInferenceFinished ignored (already finalized)")
             return
         self._inferenceFinalized = True
-        print(f"[DEBUG][SegWidget] onInferenceFinished called. isStopping={self.isStopping}")
+        logger.debug(f"[DEBUG][SegWidget] onInferenceFinished called. isStopping={self.isStopping}")
         self.onProgressInfo(f"[DEBUG][SegWidget] onInferenceFinished received (isStopping={self.isStopping})")
         if self.isStopping:
             self.onProgressInfo("stop requested")
@@ -1094,12 +1095,12 @@ class SegmentationWidget(qt.QWidget):
 
             # === PHASE 4: Succès ===
             self.onProgressInfo("Processing completed successfully")
-            logging.info(f"Volume processed: {volNode.GetName() if volNode else 'unknown'}")
+            logger.info(f"Volume processed: {volNode.GetName() if volNode else 'unknown'}")
 
         except Exception as e:
             # === GESTION DES ERREURS ===
             error_msg = f"ERROR: {str(e)}"
-            logging.critical(error_msg, exc_info=True)
+            logger.critical(error_msg, exc_info=True)
             slicer.util.errorDisplay(f"Critical error:\n{error_msg}")
             self.onProgressInfo(f"PROCESSING FAILURE:\n{error_msg}")
             self._save_state_before_crash()
@@ -1111,7 +1112,7 @@ class SegmentationWidget(qt.QWidget):
                 if hasattr(self, '_cleanupAfterCase'):
                     self._cleanupAfterCase(volNode, segNode)
                 else:
-                    logging.error("Missing _cleanupAfterCase method!")
+                    logger.error("Missing _cleanupAfterCase method!")
 
                 # Vidage cache GPU
                 try:
@@ -1143,7 +1144,7 @@ class SegmentationWidget(qt.QWidget):
                     self._setApplyVisible(True)
 
             except Exception as cleanup_error:
-                logging.critical(f"Final cleaning failure: {cleanup_error}", exc_info=True)
+                logger.critical(f"Final cleaning failure: {cleanup_error}", exc_info=True)
                 self.onProgressInfo(f"CLEANING ERROR: {cleanup_error}")
             finally:
                 self._timeout_timer.stop()
@@ -1220,7 +1221,7 @@ class SegmentationWidget(qt.QWidget):
             self.onProgressInfo(f"Cleanup complete. Memory: {self._get_memory_usage()}")
 
         except Exception as e:
-            logging.error(f"Cleanup crashed: {str(e)}", exc_info=True)
+            logger.error(f"Cleanup crashed: {str(e)}", exc_info=True)
             raise
 
     # ─── Load segmentation results ────────────────────────────────────────────
@@ -1533,7 +1534,7 @@ class SegmentationWidget(qt.QWidget):
         return segmentationNode.GetSegmentation().GetSegment(segmentId)
 
     def onInferenceError(self, errorMsg):
-        print(f"[DEBUG][SegWidget] onInferenceError called: {errorMsg}")
+        logger.debug(f"[DEBUG][SegWidget] onInferenceError called: {errorMsg}")
         self.onProgressInfo(f"[DEBUG][SegWidget] onInferenceError received: {errorMsg}")
         if self.isStopping:
             return
@@ -1949,7 +1950,7 @@ class SegmentationWidget(qt.QWidget):
 
     def _connectSegmentationLogic(self):
         if self.logic is None:
-            print("[DEBUG][SegWidget] _connectSegmentationLogic skipped: logic is None")
+            logger.debug("[DEBUG][SegWidget] _connectSegmentationLogic skipped: logic is None")
             return
         self.logic.progressInfo.connect(self.onProgressInfo)
         self.logic.errorOccurred.connect(self.onInferenceError)

@@ -1,21 +1,31 @@
 import os
 import slicer
 from slicer.ScriptedLoadableModule import *
-import logging
 import ctk
 import qt
 import uuid
 import warnings
+
 import sys
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("Medical_Anonymizer")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 # Suppress Presidio multilingual warnings - we only use English
 os.environ['PRESIDIO_SUPPRESS_WARNINGS'] = '1'
 
 # Suppress warnings before importing Presidio
 warnings.filterwarnings('ignore')
-logging.getLogger("presidio_analyzer").setLevel(logging.CRITICAL)
-logging.getLogger("presidio_anonymizer").setLevel(logging.CRITICAL)
-logging.getLogger().setLevel(logging.CRITICAL)
 
 # Capture and suppress stderr for Presidio initialization
 class SuppressStderr:
@@ -413,7 +423,7 @@ class Medical_Data_Anonymizer_ModuleWidget(ScriptedLoadableModuleWidget):
                     try:
                         spacy.cli.download(model_name)
                     except:
-                        logging.warning(f"Could not download {model_name}")
+                        logger.warning(f"Could not download {model_name}")
 
             self.statusLabel.setText("Dependencies installed successfully!")
             
@@ -541,7 +551,7 @@ class Medical_Data_Anonymizer_ModuleWidget(ScriptedLoadableModuleWidget):
                                 if text:
                                     full_text += text + "\n"
                     except Exception as pdf_error:
-                        logging.warning(f"Error extracting text from PDF {file}: {pdf_error}")
+                        logger.warning(f"Error extracting text from PDF {file}: {pdf_error}")
                         try:
                             with pdfplumber.open(input_file_path) as pdf:
                                 for page in pdf.pages:
@@ -641,10 +651,10 @@ class Medical_Data_Anonymizer_ModuleWidget(ScriptedLoadableModuleWidget):
                     "UUID": unique_id
                 })
 
-                logging.info(f"Anonymized file created: {output_path}")
+                logger.info(f"Anonymized file created: {output_path}")
 
             except Exception as e:
-                logging.error(f"Error processing {file}: {e}")
+                logger.error(f"Error processing {file}: {e}")
                 file_mappings.append({
                     "Original File Name": file,
                     "Anonymized File Name": "ERROR",
@@ -660,7 +670,7 @@ class Medical_Data_Anonymizer_ModuleWidget(ScriptedLoadableModuleWidget):
         if not mappings_df.empty:
             mappings_df.to_csv(csv_file_path, index=False)
             self.statusLabel.setText(f"Complete! Processed {len(supported_files)} files.")
-            logging.info(f"Anonymization complete. File mappings saved to {csv_file_path}.")
+            logger.info(f"Anonymization complete. File mappings saved to {csv_file_path}.")
             
             qt.QMessageBox.information(
                 slicer.util.mainWindow(),
@@ -669,7 +679,7 @@ class Medical_Data_Anonymizer_ModuleWidget(ScriptedLoadableModuleWidget):
             )
         else:
             self.statusLabel.setText("No valid files were processed.")
-            logging.info("No valid files were processed. CSV file not created.")
+            logger.info("No valid files were processed. CSV file not created.")
 
         self.progressBar.setVisible(False)
 
@@ -736,7 +746,7 @@ class Medical_Data_Anonymizer_ModuleWidget(ScriptedLoadableModuleWidget):
             return anonymized.text
 
         except Exception as e:
-            logging.error(f"Error in Presidio anonymization: {e}")
+            logger.error(f"Error in Presidio anonymization: {e}")
             return text  # Return original text if anonymization fails
 
     def extract_text_from_xml(self, element):

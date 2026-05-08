@@ -3,6 +3,20 @@ import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 from ASO_IOS_utils.icp import vtkMeanTeeth
 from ASO_IOS_utils.transformation import RotationMatrix, TransformSurf
+import logging
+import sys
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("ASO_IOS_pre_icp")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 cross = lambda a, b: np.cross(a, b)
