@@ -15,6 +15,21 @@ from MedX_CLI_utils.dashboard_utils import (
     set_disc_displacement_data, set_joint_pain_data, initialize_key_value_summary
 )
 
+import sys
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("MedX_display_figure")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
 def read_summaries(summary_folder: str) -> dict:
     """
     Read patient summary files from a directory and return as a dictionary.
@@ -663,7 +678,7 @@ def show_dashboard(summary_folder, output_folder):
     output_path = os.path.join(output_folder, "dashboard.png")
     fig.savefig(output_path)
     df.to_csv(os.path.join(output_folder, "patient_data.csv"), index=False)
-    print(f"Saved processed data to {os.path.join(output_folder, 'patient_data.csv')}")
+    logger.info(f"Saved processed data to {os.path.join(output_folder, 'patient_data.csv')}")
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate a dashboard from patient summaries")

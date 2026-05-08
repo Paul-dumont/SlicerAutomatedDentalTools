@@ -1,5 +1,19 @@
 import re
 import pandas as pd
+import sys
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("MedX_dashboard_utils")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 # (base) luciacev@ldsodhckkv94:~/training/github/SlicerAutomatedDentalTools$ python3 MedX_CLI/MedX_Dashboard/MedX_Dashboard.py /home/luciacev/Desktop/LLM/Qwen1.5B_full_V3/predictions_500 /home/luciacev/Desktop/LLM/Qwen1.5B_full_V3/Dashboard ff
 
