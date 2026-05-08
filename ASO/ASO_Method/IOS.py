@@ -11,6 +11,20 @@ import platform
 import vtk
 import shutil
 from itertools import chain
+import logging
+import sys
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("ASO_Method_IOS")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 class Auto_IOS(Method):
@@ -187,7 +201,7 @@ class Auto_IOS(Method):
             name, extension = os.path.splitext(basename)
             if self.__isSegmented__(file):
                 new_name = f"{name}_Seg{extension}"
-                print("new_name : ",new_name)
+                logger.info("New_name : ",new_name)
                 shutil.copy(file, os.path.join(folder_bypass, new_name))
 
             else:
@@ -221,7 +235,7 @@ class Auto_IOS(Method):
         if True in [label in properties for label in list_label]:
             out = True
 
-        print("segmented", out, path)
+        logger.info(f"File segmented in {path}")
         return out
 
     def Process(self, **kwargs):
@@ -283,8 +297,8 @@ class Auto_IOS(Method):
             "folder_error": path_error,
             "log_path": kwargs["logPath"],
         }
-        print("parameter pre aso", parameter_pre_aso)
-        print("parameter seg", parameter_seg)
+        logger.info(f"Parameter pre aso: {parameter_pre_aso}")
+        logger.info(f"Parameter seg: {parameter_seg}")
 
         PreOrientProcess = slicer.modules.pre_aso_ios
         SegProcess = slicer.modules.crownsegmentationcli
@@ -596,7 +610,7 @@ class Semi_IOS(Auto_IOS):
             "log_path": kwargs["logPath"],
         }
 
-        print("parameter", parameter)
+        logger.info(f"SEMI_ASO_IOS parameter: {parameter}")
         OrientProcess = slicer.modules.semi_aso_ios
         numberscan = self.NumberScan(kwargs["input_folder"])
         list_process = [

@@ -106,7 +106,6 @@ def SavePredToVTK(file_path, temp_folder, smoothing, vtk_output_path, model_size
             raise FileNotFoundError(f"File does not exist: {file_path}")
         
         logger.debug(f"Converting prediction to VTK: {file_path}")
-        import os, numpy as np, SimpleITK as sitk, vtk
 
         img = sitk.ReadImage(file_path)
         arr = sitk.GetArrayFromImage(img)
@@ -394,11 +393,6 @@ def SaveSeg(file_path, spacing, seg_arr, input_path, temp_path, outputdir, temp_
         raise
 # -- Main adapté nnUNet v2 ---
 def main(args):
-    import os, sys, glob, subprocess, shutil, time
-    import numpy as np
-    import torch
-    import SimpleITK as sitk
-
     try:
         logger.info("Starting AMASSS_CLI with nnUNet v2 backend")
         

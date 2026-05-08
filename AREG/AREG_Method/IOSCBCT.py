@@ -7,6 +7,20 @@ import json
 import time
 import qt
 
+import logging
+import sys
+# ===== Logging Configuration =====
+logger = logging.getLogger("AREG_Method_CBCT_IOS")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
 
 class IOSCBCT(Method):
     def __init__(self, widget):
@@ -216,7 +230,7 @@ class Semi_IOSCBCT(IOSCBCT):
             "list_landmark": list_lmrk_str,
             "model_folder": kwargs["model_folder_ali"],
         }
-        print("parameter", parameter_semi_aso)
+        logger.info(f"SEMI_ASO_IOSCBCT Parameter {parameter_semi_aso}")
 
         OrientProcess = slicer.modules.semi_aso_cbct
         list_process = [{"Process": OrientProcess, "Parameter": parameter_semi_aso}]
@@ -284,8 +298,7 @@ class Auto_IOSCBCT(IOSCBCT):
         list_lmrk_str = self.CheckboxisChecked(kwargs["dic_checkbox"], in_str=True)
         nb_landmark = len(list_lmrk_str.split(" "))
 
-        print("PRE_ASO param:", parameter_pre_aso)
-        print()
+        logger.info(f"PRE_ASO param:{parameter_pre_aso}")
 
         # ALI CBCT
         documentsLocation = qt.QStandardPaths.DocumentsLocation
@@ -305,8 +318,7 @@ class Auto_IOSCBCT(IOSCBCT):
         }
         ALIProcess = slicer.modules.ali_cbct
 
-        print("ALI param:", parameter_ali)
-        print()
+        logger.info(f"ALI param: {parameter_ali}")
         # SEMI ASO CBCT
 
         parameter_semi_aso = {
@@ -318,7 +330,7 @@ class Auto_IOSCBCT(IOSCBCT):
         }
         OrientProcess = slicer.modules.semi_aso_cbct
 
-        print("SEMI_ASO param:", parameter_semi_aso)
+        logger.info(f"SEMI_ASO param:{parameter_semi_aso}")
 
         list_process = [
             {

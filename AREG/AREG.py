@@ -11,6 +11,18 @@ from slicer.ScriptedLoadableModule import *
 from slicer.util import VTKObservationMixin, pip_install
 from functools import partialmethod
 
+# ===== Logging Configuration =====
+logger = logging.getLogger("AREG")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
 from AREG_Method.IOS import Auto_IOS, Semi_IOS
 from AREG_Method.CBCT import Semi_CBCT, Auto_CBCT, Or_Auto_CBCT
 from AREG_Method.Method import Method
@@ -99,11 +111,11 @@ def install_function(self,list_libs:list):
                         pip_install(lib)
 
                     elif "https:/" in version_constraint:
-                        print("version_constraint", version_constraint)
+                        logger.debug(f"Version constraint: {version_constraint}")
                         # download the library from the url
                         pip_install(version_constraint)
                     else:
-                        print("version_constraint else", version_constraint)
+                        logger.debug(f"Version constraint else: {version_constraint}")
                         lib_version = f'{lib}{version_constraint}' if version_constraint else lib
                         pip_install(lib_version)
 
@@ -761,8 +773,8 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         else:
             name, url = self.ActualMeth.getTestFileList()
 
-        print("name : ",name)
-        print("url : ",url)
+        logger.info(f"Test file name: {name}")
+        logger.info(f"Test file url: {url}")
 
         scan_folder = self.DownloadUnzip(
             url=url,
@@ -772,7 +784,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             else os.path.join("Test_Files", "DCM", name),
         )
 
-        print("scan folder : ",scan_folder)
+        logger.info(f"Scan folder: {scan_folder}")
         scan_folder_t1 = os.path.join(scan_folder, "T1")
         scan_folder_t2 = os.path.join(scan_folder, "T2")
 
@@ -1029,7 +1041,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if self.type == "IOS":
             is_installed = False
             check_env = self.onCheckRequirements()
-            print("seg_env : ",check_env)
+            logger.debug(f"Segmentation environment: {check_env}")
             
             if check_env:
                 list_libs_IOS = [("tqdm",None,None),('vtk',None,None),('pandas',None,None)]
@@ -1109,9 +1121,9 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 logging.exception("Exception while accessing first process entry")
                 return
             # /!\ Launch of the first process /!\
-            print("module name : ", self.module_name)
-            print("type: ",self.type)
-            print("method:",self.ActualMethName)
+            logger.info(f"Module name: {self.module_name}")
+            logger.info(f"Type: {self.type}")
+            logger.info(f"Method: {self.ActualMethName}")
 
             if self.type == "CBCT":
                 self.process = slicer.cli.run(
@@ -1193,20 +1205,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                 self.ui.progressBar.setValue(progress_bar_value)
                 self.ui.progressBar.setFormat(f"{progress_bar_value:.2f}%")
 
-            time_progress = os.path.getmtime(self.log_path)
-            line = self.read_log_path()
-            if (time_progress != self.time_log) and line:
-                progress = line.strip()
-            
-                self.progress = int(progress)
-                self.ui.LabelProgressPatient.setText(f"Patient : {self.progress}/{self.nb_patient}")
-                
-                progress_bar_value = round((self.progress) / self.nb_patient * 100,2)
-                self.time_log = time_progress
-                
-                self.ui.progressBar.setValue(progress_bar_value)
-                self.ui.progressBar.setFormat(f"{progress_bar_value:.2f}%")
-
     def onProcessUpdate(self, caller, event):
         currentTime = time.time() - self.startTime
         if currentTime < 60:
@@ -1245,20 +1243,18 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if caller.GetStatus() & caller.Completed:
             if caller.GetStatus() & caller.ErrorsMask:
                 # error
-                print("\n\n ========= PROCESSED ========= \n")
-
-                print(self.process.GetOutputText())
-                print("\n\n ========= ERROR ========= \n")
+                logger.info("========= PROCESS COMPLETED WITH ERRORS =========")
+                logger.info(self.process.GetOutputText())
+                logger.error("========= ERROR DETAILS =========")
                 errorText = self.process.GetErrorText()
-                print("CLI execution failed: \n \n" + errorText)
+                logger.error(f"CLI execution failed: \n{errorText}")
                 self.onCancel()
 
             else:
-                print("\n\n ========= PROCESSED ========= \n")
-
-                print(self.process.GetOutputText())
+                logger.info("========= PROCESS COMPLETED SUCCESSFULLY =========")
+                logger.info(self.process.GetOutputText())
                 try:
-                    print("name process : ",self.list_Processes_Parameters[0]["Process"])
+                    logger.info(f"Process name: {self.list_Processes_Parameters[0]['Process']}")
                     if self.list_Processes_Parameters[0]["Module"]=="AREG_IOS":
                         self.nb_extension_did += 1
                         self.run_conda_tool("areg")
@@ -1289,13 +1285,13 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.nb_change_bystep = 0
         total_time = time.time() - self.startTime
         average_time = total_time / self.nb_patient
-        print("PROCESS DONE.")
-        print(
+        logger.info("PROCESS DONE.")
+        logger.info(
             "Done in {} min and {} sec".format(
                 int(total_time / 60), int(total_time % 60)
             )
         )
-        print(
+        logger.info(
             "Average time per patient : {} min and {} sec".format(
                 int(average_time / 60), int(average_time % 60)
             )
@@ -1320,12 +1316,12 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         file_path = os.path.abspath(__file__)
         folder_path = os.path.dirname(file_path)
         csv_file = os.path.join(folder_path,"AREG_Method","liste_csv_file_T1.csv")
-        print("csv_file : ",csv_file)
+        logger.debug(f"CSV file path T1: {csv_file}")
         if os.path.exists(csv_file):
           os.remove(csv_file)
 
         csv_file = os.path.join(folder_path,"AREG_Method","liste_csv_file_T2.csv")
-        print("csv_file : ",csv_file)
+        logger.debug(f"CSV file path T2: {csv_file}")
         if os.path.exists(csv_file):
           os.remove(csv_file)
 
@@ -1609,7 +1605,7 @@ qMRMLNodeComboBox:focus {
         except Exception as e:
             self.logic.cancel_process()
             
-        print("\n\n ========= PROCESS CANCELED ========= \n")
+        logger.warning("========= PROCESS CANCELED =========")
 
         self.RunningUI(False)
 
@@ -1646,14 +1642,14 @@ qMRMLNodeComboBox:focus {
                 dentalmodelseg_path = clean_output.group(1).strip()
                 dentalmodelseg_path_clean = dentalmodelseg_path.replace("\\n","")
             else:
-                print("Error: Unable to find dentalmodelseg path.")
+                logger.error("Error: Unable to find dentalmodelseg path.")
                 return
             
             for i in range(2):
                 self.nb_extension_did += 1
                 args = self.list_Processes_Parameters[0]["Parameter"]
                 self.module_name = self.list_Processes_Parameters[0]["Module"]
-                print("args : ",args)
+                logger.debug(f"Arguments: {args}")
                 conda_exe = self.logic.conda.getCondaExecutable()
                 command = [conda_exe, "run", "-n", self.logic.name_env, "python" ,"-m", f"CrownSegmentationcli"]
                 for key, value in args.items():
@@ -1662,8 +1658,8 @@ qMRMLNodeComboBox:focus {
                     if key == "dentalmodelseg_path":
                         value = dentalmodelseg_path_clean
                     command.append(f"\"{value}\"")
-                print("*"*50)
-                print("command : ",command)
+                logger.debug("="*50)
+                logger.debug(f"Command: {command}")
                 
                 self.ui.LabelNameExtension.setText(f"{self.module_name}")
 
@@ -1695,18 +1691,18 @@ qMRMLNodeComboBox:focus {
                 
         elif type=="areg":
             args = self.list_Processes_Parameters[0]["Parameter"]
-            print("name:",self.list_Processes_Parameters[0]["Module"])
-            print("args : ", args)
+            logger.info(f"Module: {self.list_Processes_Parameters[0]['Module']}")
+            logger.debug(f"Arguments: {args}")
             self.module_name = self.list_Processes_Parameters[0]["Module"]
             
             conda_exe = self.logic.conda.getCondaExecutable()
             command = [conda_exe, "run", "-n", self.logic.name_env, "python" ,"-m", f"AREG_IOS"]
             for key, value in args.items():
-                print("key : ",key)
+                logger.debug(f"Key: {key}")
                 if isinstance(value, str) and ("\\" in value or (len(value) > 1 and value[1] == ":")):
                     value = self.logic.windows_to_linux_path(value)
                 command.append(f"\"{value}\"")
-            print("command : ",command)
+            logger.debug(f"Command: {command}")
 
             # running in // to not block Slicer
             self.process = threading.Thread(target=self.logic.condaRunCommand, args=(command,))
@@ -1929,7 +1925,7 @@ qMRMLNodeComboBox:focus {
                 self.ui.label_LibsInstallation.setText(text)
         else:
             self.ui.label_LibsInstallation.setText(f"pytorch3d is already installed")
-            print("pytorch3d already installed")
+            logger.info("pytorch3d already installed")
 
         self.all_installed = True   
         return True
@@ -2203,7 +2199,7 @@ class AREGLogic(ScriptedLoadableModuleLogic):
             self.subpro.send_signal(signal.CTRL_BREAK_EVENT)
         else:
             os.killpg(os.getpgid(self.subpro.pid), signal.SIGTERM)
-        print("Cancellation requested. Terminating process...")
+        logger.warning("Cancellation requested. Terminating process...")
 
         self.subpro.wait() ## important
         self.cancel = True
@@ -2236,7 +2232,7 @@ class AREGLogic(ScriptedLoadableModuleLogic):
 
             user = self.conda.getUser()
             command_to_execute = ["wsl", "--user", user, "--", "bash", "-c", command_execute]
-            print("command_to_execute in condaRunCommand : ", command_to_execute)
+            logger.debug(f"Command to execute in condaRunCommand: {command_to_execute}")
 
             # start subprocess without blocking; capture pipes
             self.subpro = subprocess.Popen(
@@ -2256,7 +2252,7 @@ class AREGLogic(ScriptedLoadableModuleLogic):
             for com in command:
                 command_execute = command_execute + " " + com
 
-            print("command_to_execute in conda run : ", command_execute)
+            logger.debug(f"Command to execute in conda run: {command_execute}")
             # start subprocess and capture pipes
             self.subpro = subprocess.Popen(
                 command_execute,
@@ -2283,9 +2279,9 @@ class AREGLogic(ScriptedLoadableModuleLogic):
                 err_line = stderr.readline() if stderr is not None else ''
 
                 if out_line:
-                    print(out_line.rstrip())
+                    logger.info(out_line.rstrip())
                 if err_line:
-                    print(err_line.rstrip())
+                    logger.error(err_line.rstrip())
 
                 # If process finished and no more output, break
                 if self.subpro.poll() is not None and (not out_line) and (not err_line):
@@ -2296,8 +2292,8 @@ class AREGLogic(ScriptedLoadableModuleLogic):
             try:
                 self.stdout, self.stderr = self.subpro.communicate()
                 if self.stdout:
-                    print(self.stdout)
+                    logger.info(self.stdout)
                 if self.stderr:
-                    print(self.stderr)
+                    logger.error(self.stderr)
             except Exception:
                 pass
