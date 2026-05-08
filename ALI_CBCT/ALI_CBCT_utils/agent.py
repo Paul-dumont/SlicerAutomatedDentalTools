@@ -190,8 +190,6 @@ class Agent :
         new_pos = self.position + self.movement_matrix[movement_idx]*self.speed
         if new_pos.all() > 0 and (new_pos < self.environement.GetSize(self.scale_keys[self.scale_state])).all():
             self.position = new_pos
-            # if self.verbose:
-            #     print("Moving ", self.movement_id[movement_idx])
         else:
             OUT_WARNING()
             self.ClearShortMem()
@@ -200,12 +198,12 @@ class Agent :
 
     def Train(self, data, dim):
         if self.verbose:
-            print(f"{bcolors.OKCYAN}Training agent :{bcolors.OKBLUE}{self.target}{bcolors.ENDC}")
+            logger.info(f"{bcolors.OKCYAN}Training agent :{bcolors.OKBLUE}{self.target}{bcolors.ENDC}")
         self.brain.Train(data,dim)
 
     def Validate(self, data,dim):
         if self.verbose:
-            print(f"{bcolors.OKCYAN}Validating agent :{bcolors.OKBLUE}{self.target}{bcolors.ENDC}")
+            logger.info(f"{bcolors.OKCYAN}Validating agent :{bcolors.OKBLUE}{self.target}{bcolors.ENDC}")
         return self.brain.Validate(data,dim)
 
     def SavePos(self):
@@ -309,7 +307,6 @@ class Agent :
 
     def Visited(self):
         visited = False
-        # print(self.position, self.position_shortmem[self.scale_state],)
         for previous_pos in self.position_shortmem[self.scale_state]:
             if np.array_equal(self.position,previous_pos):
                 visited = True

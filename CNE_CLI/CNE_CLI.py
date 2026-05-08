@@ -3,7 +3,22 @@
 import sys, argparse, os, traceback, glob, json
 from pathlib import Path
 
-print("CNE_CLI.py run")
+import sys
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("CNE_CLI")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+logger.info("CNE_CLI.py run")
 
 def main(args):
     # Arguments extraction
@@ -24,16 +39,16 @@ def main(args):
     try:
         from llama_cpp import Llama
     except ImportError:
-        print("ERROR: 'llama-cpp-python' library is not installed in Slicer.", file=sys.stderr)
+        logger.error("ERROR: 'llama-cpp-python' library is not installed in Slicer.", file=sys.stderr)
         sys.exit(1)
     
     # Validate that modelPath is provided and exists
     if not modelPath or not os.path.exists(modelPath):
         error_msg = f"ERROR: Model file not found or not provided: {modelPath}"
-        print(error_msg, file=sys.stderr)
+        logger.error(error_msg, file=sys.stderr)
         sys.exit(1)
     
-    print(f"Using model: {modelPath}")
+    logger.info(f"Using model: {modelPath}")
     
     # ---------------------------------------------------------
     # STEP 2 : Verification
@@ -44,7 +59,7 @@ def main(args):
     files_to_process = glob.glob(os.path.join(notesFolder_input, "*.txt"))
     
     if not files_to_process:
-        print(f"WARNING: No .txt files found in {notesFolder_input}", file=sys.stderr)
+        logger.warning(f"WARNING: No .txt files found in {notesFolder_input}", file=sys.stderr)
         print("<filter-progress>1.00</filter-progress>", flush=True)
         sys.exit(0)
 
@@ -55,7 +70,7 @@ def main(args):
     print(f"<filter-comment>Loading {modelType} model...</filter-comment>", flush=True)
     
     try:
-        print(f"Initializing Llama engine with {modelPath}...")
+        logger.info(f"Initializing Llama engine with {modelPath}...")
 
         if notesType == "TMJ":
             max_seq_length = 6144
@@ -78,7 +93,7 @@ def main(args):
         os.close(old_stderr)
         os.close(fd_devnull)
         
-        print("SUCCESS: Model loaded into memory successfully!")
+        logger.info("SUCCESS: Model loaded into memory successfully!")
 
         # ---------------------------------------------------------
         # STEP 4 : Inference Loop (Processing Files)
@@ -98,7 +113,7 @@ def main(args):
                 with open(file_path, 'r', encoding='utf-8') as f:
                     clinical_text = f.read()
                 
-                print(f"Generating extraction for {filename}...")
+                logger.info(f"Generating extraction for {filename}...")
 
                 prompt = f"""<|start_header_id|>user<|end_header_id|>
 
@@ -133,7 +148,7 @@ def main(args):
                         formatted_response = ai_response
                         
                 except Exception as e:
-                    print(f"Warning: Could not format JSON for {filename}: {e}")
+                    logger.warning(f"Warning: Could not format JSON for {filename}: {e}")
                     formatted_response = ai_response
 
                 output_filename = f"Extraction_{filename}"
@@ -142,26 +157,24 @@ def main(args):
                 with open(output_filepath, 'w', encoding='utf-8') as f:
                     f.write(formatted_response)
 
-                print(f"✓ Saved: {output_filepath}")
+                logger.info(f"✓ Saved: {output_filepath}")
                 successfully_processed += 1
 
             except Exception as e:
-                print(f"✗ ERROR processing {filename}: {e}", file=sys.stderr)
+                logger.error(f"✗ ERROR processing {filename}: {e}", file=sys.stderr)
                 failed_files.append(filename)
                 traceback.print_exc(file=sys.stderr)
                 continue
-        print(f"\n{'='*50}")
-        print(f"Processing complete:")
-        print(f"  ✓ Successfully processed: {successfully_processed}/{total_files}")
+        logger.info(f"Processing complete:")
+        logger.info(f"  ✓ Successfully processed: {successfully_processed}/{total_files}")
         if failed_files:
-            print(f"  ✗ Failed files: {', '.join(failed_files)}")
-        print(f"{'='*50}\n")      
+            logger.info(f"  ✗ Failed files: {', '.join(failed_files)}")     
 
     except ImportError:
-        print("ERROR: 'llama-cpp-python' library is not installed in Slicer.", file=sys.stderr)
+        logger.error("ERROR: 'llama-cpp-python' library is not installed in Slicer.", file=sys.stderr)
         sys.exit(1)
     except Exception as e:
-        print("ERROR OCCURRED DURING INFERENCE:", file=sys.stderr)
+        logger.error("ERROR OCCURRED DURING INFERENCE:", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 
@@ -172,7 +185,6 @@ def main(args):
     print("<filter-comment>All files processed successfully!</filter-comment>", flush=True)
 
     print("<filter-end><filter-name>Clinical Notes Extraction</filter-name></filter-end>", flush=True)
-    print("\nCNE_CLI.py done")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

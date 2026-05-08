@@ -1,4 +1,3 @@
-import logging
 import os
 import shutil
 from typing import Annotated
@@ -13,6 +12,21 @@ from slicer.util import VTKObservationMixin
 from slicer.parameterNodeWrapper import parameterNodeWrapper
 from slicer import vtkMRMLScalarVolumeNode
 import importlib
+
+import sys
+import logging
+
+# ===== Logging Configuration =====
+logger = logging.getLogger("CNE")
+logger.setLevel(logging.INFO)
+logger.propagate = False
+if logger.handlers:
+    logger.handlers.clear()
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
 
 
 # Library dependency management
@@ -32,7 +46,6 @@ def install_function(list_libs: list) -> None:
     Installs a list of packages via pip in the 3D Slicer environment.
     Assumes the user has already given permission.
     """
-    import logging
 
     original_cc = os.environ.get("CC")
     original_cxx = os.environ.get("CXX")
@@ -51,10 +64,10 @@ def install_function(list_libs: list) -> None:
                 slicer.util.pip_install(lib)
 
             slicer.util.showStatusMessage(f"{lib} successfully installed!", 3000)
-            logging.info(f"Successfully installed {lib}")
+            logger.info(f"Successfully installed {lib}")
 
         except Exception as e:
-            logging.error(f"Failed to install {lib}: {str(e)}")
+            logger.error(f"Failed to install {lib}: {str(e)}")
             slicer.util.errorDisplay(f"Failed to install {lib}.\nError: {str(e)}")
 
     if original_cc is not None:
@@ -81,7 +94,7 @@ def check_dependencies() -> bool:
             missing_libs.append("llama-cpp-python")
 
         if not missing_libs:
-            logging.info("All dependencies verified and available.")
+            logger.info("All dependencies verified and available.")
             return True
 
         if attempt < max_retries:
@@ -95,15 +108,15 @@ def check_dependencies() -> bool:
             )
 
             if slicer.util.confirmOkCancelDisplay(msg):
-                logging.info(f"Installing missing dependencies: {missing_libs}")
+                logger.info(f"Installing missing dependencies: {missing_libs}")
                 install_function(missing_libs)
                 slicer.app.processEvents()
             else:
-                logging.warning("Installation cancelled by user.")
+                logger.warning("Installation cancelled by user.")
                 slicer.util.warningDisplay("Installation cancelled. Extraction has been stopped.")
                 return False
         else:
-            logging.error(f"Failed to install required dependencies: {missing_libs}")
+            logger.error(f"Failed to install required dependencies: {missing_libs}")
             error_msg = (
                 "Failed to install required dependencies:\n\n"
                 f"{libs_str}\n\n"
@@ -333,9 +346,7 @@ class CNEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         with slicer.util.tryWithErrorDisplay(_("Failed to compute results."), waitCursor=True):
 
-            print("\n" + "="*50)
-            print("CNE (Clinical Notes Extraction)")
-            print("="*50)
+            logger.info("CNE (Clinical Notes Extraction)")
             self._updateParameterNodeFromGUI()
 
             notesFolder_input = self._parameterNode.notesFolder_input
@@ -343,11 +354,10 @@ class CNEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             notesType = self._parameterNode.notesType
             notesFolder_output = self._parameterNode.notesFolder_output
 
-            print(f"Input folder   : {notesFolder_input}")
-            print(f"Output folder  : {notesFolder_output}")
-            print(f"Selected model : {modelType}")
-            print(f"Notes type     : {notesType}")
-            print("-" * 50)
+            logger.info(f"Input folder   : {notesFolder_input}")
+            logger.info(f"Output folder  : {notesFolder_output}")
+            logger.info(f"Selected model : {modelType}")
+            logger.info(f"Notes type     : {notesType}")
 
             cliNode = self.logic.process(
                 notesFolder_input, modelType,
@@ -469,7 +479,7 @@ class CNELogic(ScriptedLoadableModuleLogic):
             dest_folder = os.path.join(destBasePath, folder_name)
             
             if not os.path.exists(source_folder):
-                logging.warning(f"Source folder not found: {source_folder}")
+                logger.warning(f"Source folder not found: {source_folder}")
                 continue
             
             # Remove destination if it already exists
@@ -478,8 +488,8 @@ class CNELogic(ScriptedLoadableModuleLogic):
             
             # Copy the folder
             shutil.copytree(source_folder, dest_folder)
-            logging.info(f"Test folder copied from {source_folder} to {dest_folder}")
-            print(f"Test folder download: {dest_folder}")
+            logger.info(f"Test folder copied from {source_folder} to {dest_folder}")
+            logger.info(f"Test folder download: {dest_folder}")
         
         # Determine input and output paths
         if notesType == "Ortho":
@@ -496,7 +506,6 @@ class CNELogic(ScriptedLoadableModuleLogic):
     
     def getModelPath(self, modelType: str,notesType: str):
         """Returns the local path to the model, downloading it if necessary with a progress popup."""
-        print(notesType,modelType)
 
         # 1. Configuration of the model based on UI selection
         if notesType == "Ortho":
@@ -528,7 +537,6 @@ class CNELogic(ScriptedLoadableModuleLogic):
                 dialogText = "Downloading Max TMJ AI model (approx. 4.4 GB)..."
         
         else:
-            # print(f"{repo_id}\n",f"{fileName}\n",localModelName)
             raise ValueError(f"Unknown model type selected: {modelType}")
 
         modelUrl = f"https://huggingface.co/{repo_id}/resolve/main/{fileName}"
@@ -549,7 +557,7 @@ class CNELogic(ScriptedLoadableModuleLogic):
 
         # 3. Check and download
         if not os.path.exists(destPath):
-            print(f"Downloading {modelType} model to: {destPath}")
+            logger.info(f"Downloading {modelType} model to: {destPath}")
             
             # --- Create the popup (QProgressDialog) ---
             progressDialog = qt.QProgressDialog(dialogText, "Cancel", 0, 100)
@@ -605,7 +613,7 @@ class CNELogic(ScriptedLoadableModuleLogic):
                 missing.append("Output folder")
 
             error_msg = f"Process cancelled: Missing required parameters: {', '.join(missing)}"
-            logging.error(error_msg)
+            logger.error(error_msg)
             slicer.util.errorDisplay(error_msg)
             return None
 
@@ -626,7 +634,7 @@ class CNELogic(ScriptedLoadableModuleLogic):
             "modelPath": modelPath,
         }
 
-        print(f"Launching CLI with model: {modelPath}")
+        logger.info(f"Launching CLI with model: {modelPath}")
         self.cliNode = slicer.cli.run(CLI_module, None, parameters)
         self.cliNode.AddObserver(slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, self.onCliModified)
 
@@ -641,25 +649,22 @@ class CNELogic(ScriptedLoadableModuleLogic):
         status = caller.GetStatus()
 
         if status & (slicer.vtkMRMLCommandLineModuleNode.Completed | slicer.vtkMRMLCommandLineModuleNode.Cancelled):
-            print("Background process finished (CLI)")
-            print("="*50)
+            logger.info("Background process finished (CLI)")
 
             if status == slicer.vtkMRMLCommandLineModuleNode.Completed:
-                print("CNE (Clinical Notes Extraction) - COMPLETE")
+                logger.info("CNE (Clinical Notes Extraction) - COMPLETE")
                 slicer.util.messageBox("Notes extraction is complete!")
             elif status == slicer.vtkMRMLCommandLineModuleNode.Cancelled:
-                print("PROCESS CANCELLED BY USER")
-
-            print("="*50)
+                logger.info("PROCESS CANCELLED BY USER")
 
             output_text = caller.GetOutputText()
             if output_text:
-                print("\n--- Detailed CLI Logs ---")
-                print(output_text.strip())
-                print("---------------------------\n")
+                logger.info("\n--- Detailed CLI Logs ---")
+                logger.info(output_text.strip())
+                logger.info("---------------------------\n")
 
             error_text = caller.GetErrorText()
             if error_text:
-                logging.error("\n--- CLI ERRORS ---")
-                print(error_text.strip())
-                print("---------------------\n")
+                logger.error("\n--- CLI ERRORS ---")
+                logger.error(error_text.strip())
+                logger.error("---------------------\n")

@@ -1305,7 +1305,7 @@ class ALIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.label_LibsInstallation.setText(text)
     else:
       self.ui.label_LibsInstallation.setText(f"pytorch3d is already installed")
-      print("pytorch3d already installed")
+      logger.info("pytorch3d already installed")
 
     self.all_installed = True   
     return True
@@ -2142,7 +2142,7 @@ class ALILogic(ScriptedLoadableModuleLogic):
       self.subpro.send_signal(signal.CTRL_BREAK_EVENT)
     else:
       os.killpg(os.getpgid(self.subpro.pid), signal.SIGTERM)
-    print("Cancellation requested. Terminating process...")
+    logger.info("Cancellation requested. Terminating process...")
 
     self.subpro.wait() ## important
     self.cancel = True
@@ -2175,7 +2175,7 @@ class ALILogic(ScriptedLoadableModuleLogic):
 
       user = self.conda.getUser()
       command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-      print("command_to_execute in condaRunCommand : ",command_to_execute)
+      logger.info("command_to_execute in condaRunCommand : ",command_to_execute)
 
       self.subpro = subprocess.Popen(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                               text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),
@@ -2187,21 +2187,21 @@ class ALILogic(ScriptedLoadableModuleLogic):
         for com in command :
           command_execute = command_execute+ " "+com
 
-        print("command_to_execute in conda run : ",command_execute)
+        logger.info("command_to_execute in conda run : ",command_execute)
         self.subpro = subprocess.Popen(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(), executable="/bin/bash", preexec_fn=os.setsid)
     import sys
     
     self.stdout, self.stderr = self.subpro.communicate()
 
-    print("PROCESS OUTPUT")
+    logger.info("PROCESS OUTPUT")
     if self.stdout:
-      print(self.stdout)
+      logger.info(self.stdout)
     else:
-      print("(No output)")
+      logger.info("(No output)")
     
-    print("PROCESS Error")
+    logger.info("PROCESS Error")
     if self.stderr:
-      print(self.stderr)
+      logger.error(self.stderr)
     else:
-      print("(No error)")
+      logger.info("(No error)")
     sys.stdout.flush()
