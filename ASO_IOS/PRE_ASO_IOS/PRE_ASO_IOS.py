@@ -585,10 +585,10 @@ if __name__ == "__main__":
                 logger.warning(f"  ... and {len(result['errors']) - 10} more errors")
         
         if result['successful'] > 0:
-            logger.info(f"✓ Successfully processed {result['successful']} files")
+            logger.info(f"Successfully processed {result['successful']} files")
         
         if result['failed'] > 0:
-            logger.warning(f"✗ Failed to process {result['failed']} files")
+            logger.warning(f"Failed to process {result['failed']} files")
             logger.info(f"Failed file indices: {result.get('failed_indices', [])[:20]}")
         
         logger.info("="*80)

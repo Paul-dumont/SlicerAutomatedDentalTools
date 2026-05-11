@@ -173,9 +173,9 @@ def generate_dashboard_figure(df: pd.DataFrame, output_folder: str = None) -> pl
     Args:
         df (pd.DataFrame): Processed dataframe from process_summaries()
     """
-    ## imports déjà présents en haut du fichier
+    ## imports already in header
     try:
-        # output_folder est passé comme variable locale par show_dashboard
+        # output_folder is given as local variable by show_dashboard
         import inspect
         frame = inspect.currentframe()
         args, _, _, values = inspect.getargvalues(frame)
@@ -234,7 +234,7 @@ def generate_dashboard_figure(df: pd.DataFrame, output_folder: str = None) -> pl
             wedgeprops={'linewidth': 1, 'edgecolor': 'white'})
     ax_age.set_title('Age Distribution', fontsize=16, pad=15, fontweight='semibold')
 
-    # Column 2: Sleep Disorder Prevalence (adapté deux segments)
+    # Column 2: Sleep Disorder Prevalence
     ax_sleep = fig.add_subplot(gs_top_left[0, 1])
     sleep_colors = ['#ff9999', '#bdbdbd']  # rouge, gris
     wedges, texts, autotexts = ax_sleep.pie(

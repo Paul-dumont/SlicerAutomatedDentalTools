@@ -156,7 +156,6 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.applyDarkModeStyles()
 
     def _ensure_env(self) -> bool:
-        # DEBUG: entrée dans la fonction
         logger.debug(f"[DEBUGG] _ensure_env called, name_env='{self.name_env}'")
 
         # 1) create/test env
@@ -169,13 +168,13 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             exists_after = self.conda.condaTestEnv(self.name_env)
             logger.debug(f"[DEBUG] condaTestEnv('{self.name_env}') after creation → {exists_after!r}")
             if not exists_after:
-                self.sig.log.emit("❌ env creation failed")
+                self.sig.log.emit("env creation failed")
                 logger.debug("[DEBUG] env creation failed, aborting")
                 return False
-            self.sig.log.emit("✔ env created")
+            self.sig.log.emit("env created")
             logger.debug("[DEBUG] env created successfully")
         else:
-            self.sig.log.emit(f"✔ env '{self.name_env}' exists")
+            self.sig.log.emit(f"env '{self.name_env}' exists")
             logger.debug(f"[DEBUG] env '{self.name_env}' already exists, skipping creation")
 
         # 2) install torch/cu118 first
@@ -188,14 +187,14 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.sig.log.emit(f"[DEBUG] torch pip rc={rc!r}")
         logger.debug(f"[DEBUG] torch install returned → {rc!r}")
         if isinstance(rc, int) and rc != 0:
-            self.sig.log.emit("❌ torch install failed")
+            self.sig.log.emit("torch install failed")
             logger.debug("[DEBUG] torch install failed (int rc)")
             return False
         if isinstance(rc, str) and any(err in rc.lower() for err in ("error","failed")):
-            self.sig.log.emit("❌ torch install failed")
+            self.sig.log.emit("torch install failed")
             logger.debug("[DEBUG] torch install failed (string rc)")
             return False
-        self.sig.log.emit("✔ torch installed")
+        self.sig.log.emit("torch installed")
         logger.debug("[DEBUG] torch installed successfully")
 
         # 3) downgrade numpy <2.0 for compatibility
@@ -207,18 +206,18 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.sig.log.emit(f"[DEBUG] numpy downgrade rc={rc2!r}")
         logger.debug(f"[DEBUG] numpy downgrade returned → {rc2!r}")
         if isinstance(rc2, int) and rc2 != 0:
-            self.sig.log.emit("❌ numpy downgrade failed")
+            self.sig.log.emit("numpy downgrade failed")
             logger.debug("[DEBUG] numpy downgrade failed (int rc2)")
             return False
         if isinstance(rc2, str) and any(err in rc2.lower() for err in ("error","failed")):
-            self.sig.log.emit("❌ numpy downgrade failed")
+            self.sig.log.emit("numpy downgrade failed")
             logger.debug("[DEBUG] numpy downgrade failed (string rc2)")
             return False
 
         # env ready
         self._env_ready = True
         self.sig.progress.emit(100)
-        self.sig.log.emit("✔ env ready")
+        self.sig.log.emit("env ready")
         logger.debug("[DEBUG] _ensure_env succeeded, env ready")
         return True
 
@@ -255,7 +254,6 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     "output_dir": self.output_dir,
                     "suffix": self.ui.suffixLineEdit.text or "seg"
                 }))
-                            # debug avant d’invoquer CondaSetUp
                 self.sig.log.emit(f"[DEBUG] getCondaPath(): {self.conda.getCondaPath()!r}")
                 self.sig.log.emit(f"[DEBUG] conda executable: {self.conda.getCondaExecutable()!r}")
                 self.sig.log.emit(f"[DEBUG] condaTestEnv('{self.name_env}') → {self.conda.condaTestEnv(self.name_env)}")
@@ -283,7 +281,7 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._flush_q()
             self.ui.TimerLabel.setText(f"{time.time()-t0:.1f}s")
         self._flush_q()
-        self.sig.log.emit("✔ ALL DONE")
+        self.sig.log.emit("ALL DONE")
         self.ui.PredScanLabel.setText("Done")
         self._toggle_ui(False)
 
@@ -352,7 +350,7 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     slicer.app.processEvents()
             self.model_dir = str(dst)
             self.ui.lineEditModelPath.setText(self.model_dir)
-            _ui_log(self.ui_q, "Model downloaded ✓")
+            _ui_log(self.ui_q, "Model downloaded")
         except Exception as e:
             qt.QMessageBox.warning(self.parent, "Download", str(e))
             _ui_log(self.ui_q, f"[ERROR] {e}")

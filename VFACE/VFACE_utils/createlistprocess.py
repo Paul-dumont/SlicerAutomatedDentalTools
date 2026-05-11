@@ -1664,11 +1664,11 @@ def SplitT2(t2_folder, transform):
                 })
 
     if not t2_files:
-        logger.warning(f"⚠️ No T2 files found in {t2_folder}")
+        logger.warning(f"No T2 files found in {t2_folder}")
     else:
         cbct_count = len([f for f in t2_files if f['file_type'] == 'cbct'])
         transform_count = len([f for f in t2_files if f['file_type'] == 'transform'])
-        logger.info(f"✅ Found {cbct_count} CBCT file(s)" + (f" and {transform_count} transform file(s)" if transform else ""))
+        logger.info(f"Found {cbct_count} CBCT file(s)" + (f" and {transform_count} transform file(s)" if transform else ""))
     
     return t2_files
 
@@ -1936,9 +1936,8 @@ def write_vtk(polydata, file_path):
 
 def clean_and_triangulate(polydata):
     """
-    Nettoie et triangule un polydata.
-    Utilise DeepCopy pour couper les liens avec les pipelines VTK internes
-    et éviter les fuites mémoire lors du batch processing.
+    Clean and triangulate a polydata.
+    Use DeepCopy to cut the links with inter VTK pipelines.
     """
     if not polydata or polydata.GetNumberOfPoints() == 0:
         raise ValueError("Cannot clean empty or invalid polydata")
@@ -2017,7 +2016,7 @@ def compute_distance(polydata1, polydata2, signed=True):
 
 def compute_distance_subsampled(polydata1, polydata2, signed=True, target_points=500000):
     """
-    Version avec sous-échantillonnage optimisée pour les gros datasets
+    Optimized subsample
     """
     import gc
     logger.info("Using subsampled distance computation...")
@@ -2070,7 +2069,7 @@ def compute_distance_subsampled(polydata1, polydata2, signed=True, target_points
 
 def create_fallback_result(polydata, signed=True):
     """
-    Crée un résultat fallback avec des distances nulles
+    Create a fallback for null distance
     """
     logger.info("Creating fallback result with zero distances...")
     
@@ -2101,7 +2100,7 @@ def create_fallback_result(polydata, signed=True):
 
 def subsample_polydata(polydata, ratio):
     """
-    Sous-échantillonnage avec décimation. DeepCopy pour couper le pipeline.
+    Subsample using DeepCopy
     """
     logger.info(f"Decimating mesh with target ratio {ratio:.3f}")
     
@@ -2155,7 +2154,7 @@ def subsample_polydata(polydata, ratio):
 
 def interpolate_distance_to_original(distance_result, original_polydata):
     """
-    Version simplifiée d'interpolation
+    Simplified Interpolation
     """
     logger.info("Creating result with original geometry...")
     
@@ -2215,12 +2214,7 @@ def interpolate_distance_to_original(distance_result, original_polydata):
 
 
 def compute_distance_standard(polydata1, polydata2, signed=True):
-    """
-    Version standard avec DeepCopy pour éviter les fuites mémoire.
-    vtkDistancePolyDataFilter construit un vtkCellLocator interne qui garde
-    des références aux inputs. Sans DeepCopy, ces structures restent en mémoire
-    côté C++ et le garbage collector Python ne peut pas les libérer.
-    """
+
     try:
         logger.info("Creating distance filter...")
         distance_filter = vtk.vtkDistancePolyDataFilter()
@@ -2277,12 +2271,12 @@ def compute_distance_standard(polydata1, polydata2, signed=True):
 
 def batch_process(t1_dir, t2_dir, patient_list, output_dir, signed=True, output_text=".vtk", zone_type="merged"):
     """
-    Batch process qui exécute chaque paire de fichiers dans un sous-processus
-    séparé pour garantir la libération complète de la mémoire entre chaque cas.
+    A batch process that executes each pair of files in a separate subprocess
+    to ensure that memory is completely freed between each case.
     
-    Le problème fondamental est que vtkDistancePolyDataFilter alloue de la mémoire
-    côté C++ (cell locators, BSP trees) que ni gc.collect() ni DeepCopy ne peuvent
-    libérer complètement. Seul un processus séparé garantit la libération via l'OS.
+    The fundamental problem is that vtkDistancePolyDataFilter allocates memory
+    on the C++ side (cell locators, BSP trees) that neither gc.collect() nor DeepCopy can
+    fully free. Only a separate process guarantees memory release via the OS.
     """
     import subprocess
     import json
@@ -2486,12 +2480,12 @@ def batch_process(t1_dir, t2_dir, patient_list, output_dir, signed=True, output_
                 'output_file': output_filename,
             })
             
-            logger.info(f"  ✓ Successfully processed {output_filename}")
+            logger.info(f"Successfully processed {output_filename}")
             
         except subprocess.TimeoutExpired:
-            logger.error(f"  ✗ TIMEOUT processing {Path(pair['file1']).name} (>10 min)")
+            logger.error(f"  TIMEOUT processing {Path(pair['file1']).name} (>10 min)")
         except Exception as e:
-            logger.error(f"  ✗ Error: {e}")
+            logger.error(f"  Error: {e}")
             traceback.print_exc()
         
         if psutil:
@@ -2503,7 +2497,7 @@ def batch_process(t1_dir, t2_dir, patient_list, output_dir, signed=True, output_
     
     logger.info(f"Processing complete. {len(processed_pairs)}/{total_files} pairs processed.")
     for pair in processed_pairs:
-        logger.info(f"  ✓ {pair['patient_id']} ({pair['zone']}): {pair['output_file']}")
+        logger.info(f"  {pair['patient_id']} ({pair['zone']}): {pair['output_file']}")
 
 def search(path, *args):
     """

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AMASSS_CLI.py – Adaptation pour nnUNet v2 (MAX, MAND, CB)
+AMASSS_CLI.py – Adaptation for nnUNet v2 (MAX, MAND, CB)
 """
 import argparse
 import time, os, sys, glob, subprocess, shutil
@@ -391,7 +391,7 @@ def SaveSeg(file_path, spacing, seg_arr, input_path, temp_path, outputdir, temp_
     except Exception as e:
         logger.error(f"Error in SaveSeg: {e}")
         raise
-# -- Main adapté nnUNet v2 ---
+# -- Main adapt for nnUNet v2 ---
 def main(args):
     try:
         logger.info("Starting AMASSS_CLI with nnUNet v2 backend")
@@ -719,9 +719,8 @@ def main(args):
 
     except Exception as e:
         logger.error(f"Fatal error in main(): {e}")
-        sys.exit(f"❌ Processing failed: {e}")
+        sys.exit(f"Processing failed: {e}")
 
-# ── Entrée CLI ────────────────────────────────────────────────────────────────
 if __name__=="__main__":
     try:
         logger.info("AMASSS_CLI entry point initiated")
@@ -771,4 +770,4 @@ if __name__=="__main__":
         sys.exit(e.code)
     except Exception as e:
         logger.critical(f"Fatal error in entry point: {e}")
-        sys.exit(f"❌ Fatal error: {e}")
+        sys.exit(f"Fatal error: {e}")

@@ -1,8 +1,3 @@
-"""
-Module contenant la logique de segmentation extraite de SegmentationWidget.py
-Peut être importé et utilisé dans createlistprocess.py pour la fonction run_bds
-"""
-
 import vtk
 import numpy as np
 import slicer
@@ -26,7 +21,7 @@ formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
-# Désactiver les warnings VTK
+# Desactivate les warnings VTK
 vtk.vtkObject.GlobalWarningDisplayOff()
 
 # ─── Model descriptions ──────────────────────────────────────────────────────
@@ -57,20 +52,18 @@ class ExportFormat(Flag):
     VTK_MERGED = auto()
 
 class PythonDependencyChecker:
-    """Vérificateur de dépendances Python simple"""
+    """Check python dependency"""
     
     def downloadWeightsIfNeeded(self, onLine):
-        """Vérifie et télécharge les poids si nécessaire"""
-        # Implementation simplifiée - retourne True pour l'instant
+        """Check and download the weights if necessary"""
         onLine("Weights check completed")
         return True
 
-# ─── Logique de segmentation principale ───────────────────────────────────────────
+# ─── Segmentation Logic ───────────────────────────────────────────
 
 class SegmentationLogic:
     """
-    Classe contenant toute la logique de segmentation dentaire
-    sans les éléments d'interface utilisateur
+    Class containing all the dental segmentation logic without UI
     """
     
     def __init__(self):
@@ -86,13 +79,13 @@ class SegmentationLogic:
         self._dependencyChecker = PythonDependencyChecker()
         self.fullInfoLogs = []
         
-        # Configuration par défaut
+        #Default Configuration
         self.selectedModel = "DentalSegmentator"
         self.selectedDevice = "cuda"
         self.exportFormats = ExportFormat.STL | ExportFormat.NIFTI
     
     def setInputFolder(self, folderPath):
-        """Définit le dossier d'entrée contenant les volumes"""
+        """Define input folder"""
         self.folderPath = folderPath
         folder = Path(folderPath)
         # Filtrer selon vos formats, ex. tous les fichiers NIfTI
@@ -101,11 +94,11 @@ class SegmentationLogic:
         self.log_info(f"Found {len(self.folderFiles)} file(s) in the folder.")
     
     def setOutputFolder(self, outputPath):
-        """Définit le dossier de sortie"""
+        """Define output folder"""
         self.outputFolderPath = outputPath
     
     def setModel(self, model_name):
-        """Définit le modèle à utiliser"""
+        """Define model to use"""
         if model_name in MODEL_DESCRIPTIONS:
             self.selectedModel = model_name
             self.log_info(f"Model set to: {model_name}")
@@ -113,11 +106,11 @@ class SegmentationLogic:
             raise ValueError(f"Unknown model: {model_name}")
     
     def setDevice(self, device):
-        """Définit le dispositif (cuda, cpu, mps)"""
+        """Define the device (cuda, cpu, mps)"""
         self.selectedDevice = device
     
     def setExportFormats(self, formats):
-        """Définit les formats d'export"""
+        """Define export formats"""
         self.exportFormats = formats
     
     def log_info(self, message):
@@ -126,12 +119,12 @@ class SegmentationLogic:
         self.fullInfoLogs.append(message)
     
     def log_error(self, message):
-        """Log d'erreur"""
+        """Error log"""
         logger.error(f"[ERROR] {message}")
         self.fullInfoLogs.append(f"ERROR: {message}")
     
     def processAllFiles(self):
-        """Traite tous les fichiers du dossier d'entrée"""
+        """Process all input files"""
         if not self.folderPath or not self.folderFiles:
             self.log_error("No input folder or files specified")
             return False
@@ -140,16 +133,16 @@ class SegmentationLogic:
             self.log_error("No output folder specified")
             return False
         
-        # Installation des dépendances
+        # Install the dependencies
         if not self._installDependencies():
             return False
         
-        # Traitement de tous les fichiers
+        # Processing all files
         for i, file_path in enumerate(self.folderFiles):
             self.currentFileIndex = i
             self.log_info(f"Processing file {i+1}/{len(self.folderFiles)}: {file_path.name}")
             
-            # Maintenir Slicer réactif
+            # Keep Slicer dynamic
             slicer.app.processEvents()
             
             if self.isStopping:
@@ -165,7 +158,6 @@ class SegmentationLogic:
                 self.log_error(f"Exception processing file {file_path}: {str(e)}")
                 continue
             
-            # Autre point de vérification pour maintenir la réactivité
             slicer.app.processEvents()
         
         self.log_info("All files processing completed")
@@ -174,7 +166,7 @@ class SegmentationLogic:
     def processFile(self, file_path):
         """Traite un seul fichier"""
         try:
-            # Chargement du volume
+            #Load volume
             loadedVolume = slicer.util.loadVolume(str(file_path))
             if not loadedVolume:
                 self.log_error(f"Failed to load volume: {file_path}")
@@ -183,11 +175,11 @@ class SegmentationLogic:
             self.currentVolumeNode = loadedVolume
             self.log_info(f"Loaded volume: {loadedVolume.GetName()}")
             
-            # Configuration de l'affichage
+            # Configuration of display
             slicer.util.setSliceViewerLayers(background=loadedVolume)
             slicer.util.resetSliceViews()
             
-            # Lancement de la segmentation
+            # Run segmentation
             success = self._runSegmentationForVolume(loadedVolume)
             
             return success
@@ -197,7 +189,7 @@ class SegmentationLogic:
             return False
     
     def _installDependencies(self):
-        """Installation des dépendances nécessaires"""
+        """Install the dependencies"""
         try:
             self.log_info("Checking dependencies...")
             
@@ -219,11 +211,11 @@ class SegmentationLogic:
             return False
     
     def _runSegmentationForVolume(self, volumeNode):
-        """Lance la segmentation pour un volume donné"""
+        """Run the segmentation"""
         try:
             from SlicerNNUNetLib import Parameter
             
-            # Configuration du modèle selon la sélection
+            #Model Configuration
             parameter = self._getModelParameter()
             
             if not parameter.isSelectedDeviceAvailable():
@@ -232,13 +224,13 @@ class SegmentationLogic:
             slicer.app.processEvents()
             self.logic.setParameter(parameter)
             
-            # Démarrer la segmentation
+            #Start the segmentation
             self.logic.startSegmentation(volumeNode)
             
-            # Attendre la fin de la segmentation avec des processEvents() réguliers
+            # Wait end of segmentation
             self._waitForSegmentationWithEvents()
             
-            # Traitement des résultats
+            # Process results
             return self._processSegmentationResults(volumeNode)
             
         except Exception as e:
@@ -246,24 +238,22 @@ class SegmentationLogic:
             return False
     
     def _waitForSegmentationWithEvents(self):
-        """Attendre la fin de la segmentation tout en maintenant Slicer réactif"""
+        """Wait the end of the segmentation"""
         import time
         
-        # Variables pour le timeout et le feedback
         start_time = time.time()
         last_log_time = start_time
-        timeout_seconds = 3600  # 1 heure maximum
+        timeout_seconds = 3600  # 1 hour maximum
         
         self.log_info("Segmentation started - this may take several minutes...")
         
         while not self.isStopping:
-            # Traiter les événements de l'interface pour maintenir la réactivité
             slicer.app.processEvents()
             
-            # Vérifier si la segmentation est terminée
+            # Check if the segmentation is over
             segmentation_finished = False
             try:
-                # Essayer différentes méthodes selon la version du module
+                # Try different version depending on the module
                 if hasattr(self.logic, 'isFinished'):
                     segmentation_finished = self.logic.isFinished()
                 elif hasattr(self.logic, 'finished'):
@@ -273,8 +263,6 @@ class SegmentationLogic:
                 elif hasattr(self.logic, 'running'):
                     segmentation_finished = not self.logic.running
                 else:
-                    # Si aucune méthode disponible, essayer de charger la segmentation
-                    # Si elle existe, la segmentation est probablement terminée
                     try:
                         test_seg = self.logic.loadSegmentation()
                         if test_seg:
@@ -284,18 +272,17 @@ class SegmentationLogic:
                         
             except Exception as e:
                 self.log_error(f"Error checking segmentation status: {str(e)}")
-                # En cas d'erreur, continuer d'attendre
+                # If error just wait
                 segmentation_finished = False
             
             if segmentation_finished:
                 break
             
-            # Attendre un peu avant de vérifier à nouveau
-            time.sleep(0.05)  # Réduction à 50ms pour une meilleure réactivité
+            time.sleep(0.05)
             
             current_time = time.time()
             
-            # Log de progression toutes les 30 secondes
+            #progression Log
             if current_time - last_log_time > 30:
                 elapsed = int(current_time - start_time)
                 minutes = elapsed // 60
@@ -303,13 +290,12 @@ class SegmentationLogic:
                 self.log_info(f"Segmentation in progress... ({minutes}m {seconds}s)")
                 last_log_time = current_time
             
-            # Vérification du timeout
+            # Check timeout
             if current_time - start_time > timeout_seconds:
                 self.log_error("Segmentation timeout - process taking too long")
                 self.logic.stopSegmentation()
                 return False
             
-            # Vérification plus fréquente de l'arrêt demandé
             if self.isStopping:
                 break
         
@@ -321,7 +307,7 @@ class SegmentationLogic:
         return True
     
     def _getModelParameter(self):
-        """Obtient les paramètres du modèle sélectionné"""
+        """Get Model parameters"""
         from SlicerNNUNetLib import Parameter
         
         if self.selectedModel == "PediatricDentalsegmentator":
@@ -336,16 +322,14 @@ class SegmentationLogic:
             basePath = Path(__file__).parent.joinpath("Resources", "ML", "Dataset002_380CT", "nnUNetTrainer__nnUNetPlans__3d_fullres").resolve()
             self._downloadModelIfNeeded("universallab", basePath)
             
-        else:  # DentalSegmentator par défaut
-            # Utilise le Dataset111_453CT qui semble être le modèle DentalSegmentator original
+        else:  # Default DentalSegmentator
             self.log_info("Using Dataset111_453CT for DentalSegmentator")
             basePath = Path(__file__).parent.parent.joinpath("Resources", "ML", "Dataset111_453CT", "nnUNetTrainer__nnUNetPlans__3d_fullres").resolve()
-            # Pas besoin de télécharger, le modèle existe déjà
         
         return Parameter(folds="0", modelPath=basePath, device=self.selectedDevice)
     
     def _downloadModelIfNeeded(self, model_type, basePath):
-        """Télécharge le modèle s'il n'existe pas"""
+        """Download the model"""
         fold_path = basePath.joinpath("fold_0")
         fold_path.mkdir(parents=True, exist_ok=True)
         
@@ -379,9 +363,9 @@ class SegmentationLogic:
                 slicer.util.downloadFile(model_urls["plans"], str(basePath.joinpath("plans.json")))
     
     def _processSegmentationResults(self, volumeNode):
-        """Traite les résultats de segmentation"""
+        """Process segmentation results"""
         try:
-            # Chargement des résultats
+            #Load results
             segmentationNode = self._loadSegmentationResults()
             if not segmentationNode:
                 self.log_error("No segmentation results found")
@@ -389,13 +373,12 @@ class SegmentationLogic:
             
             segmentationNode.SetName(volumeNode.GetName() + "_Segmentation")
             
-            # Mise à jour de l'affichage
+            # Display progress
             self._updateSegmentationDisplay(segmentationNode)
             
-            # Maintenir Slicer réactif pendant l'export
             slicer.app.processEvents()
             
-            # Export selon les formats sélectionnés
+            # Export selected formats
             if self.exportFormats & ExportFormat.NIFTI:
                 self.log_info("Starting NIfTI export...")
                 self._saveSegmentationAsNifti(segmentationNode, volumeNode)
@@ -421,7 +404,7 @@ class SegmentationLogic:
                 self._exportVTKPerLabel(segmentationNode)
                 slicer.app.processEvents()
             
-            # Nettoyage
+            # Cleaning
             self._cleanupAfterCase(volumeNode, segmentationNode)
             
             return True
@@ -431,7 +414,7 @@ class SegmentationLogic:
             return False
     
     def _loadSegmentationResults(self):
-        """Charge les résultats de segmentation"""
+        """Load segmentation results"""
         try:
             segmentationNode = self.logic.loadSegmentation()
             return segmentationNode
@@ -440,7 +423,7 @@ class SegmentationLogic:
             return None
     
     def _updateSegmentationDisplay(self, segmentationNode):
-        """Met à jour l'affichage de la segmentation"""
+        """Update display of the segmentation"""
         if not segmentationNode:
             return
         
@@ -452,11 +435,11 @@ class SegmentationLogic:
         
         segmentation = segmentationNode.GetSegmentation()
         
-        # Application des couleurs et labels selon le modèle
+        # Apply colors and labels to the segmentation
         self._applySegmentationLabelsAndColors(segmentation)
     
     def _applySegmentationLabelsAndColors(self, segmentation):
-        """Applique les labels et couleurs selon le modèle"""
+        """Apply colors and labels to the segmentation"""
         if self.selectedModel == "UniversalLabDentalsegmentator":
             labels = [
                 "Upper-right third molar", "Upper-right second molar", "Upper-right first molar",
@@ -513,9 +496,9 @@ class SegmentationLogic:
             saved = slicer.util.saveNode(labelmapVolumeNode, output_path)
             
             if saved:
-                self.log_info(f"✅ Segmentation saved to {output_path}")
+                self.log_info(f"Segmentation saved to {output_path}")
             else:
-                self.log_error(f"❌ Failed to save segmentation to {output_path}")
+                self.log_error(f"Failed to save segmentation to {output_path}")
             
             # Nettoyage du label-map temporaire
             slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
@@ -546,14 +529,14 @@ class SegmentationLogic:
             self.log_error(f"Error exporting OBJ: {str(e)}")
     
     def _exportMergedVTK(self, segmentationNode):
-        """Export VTK fusionné - un seul fichier contenant tous les segments"""
+        """Export VTK"""
         try:
             import os, re
             from vtk.util.numpy_support import vtk_to_numpy
             
             self.log_info("MergedVTK: Start")
             
-            # Création du labelmap
+            # Create labelmap
             labelmapVolumeNode = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
             slicer.modules.segmentations.logic().ExportAllSegmentsToLabelmapNode(segmentationNode, labelmapVolumeNode)
             img = labelmapVolumeNode.GetImageData()
@@ -606,7 +589,6 @@ class SegmentationLogic:
                     continue
                 self.log_info(f"MergedVTK: Processing label {int(labelValue)} ({i}/{len(labels)})")
                 
-                # Maintenir Slicer réactif pendant le traitement long
                 slicer.app.processEvents()
 
                 thresh = vtk.vtkThreshold()
@@ -678,7 +660,7 @@ class SegmentationLogic:
             writer.Write()
             
             slicer.mrmlScene.RemoveNode(labelmapVolumeNode)
-            self.log_info(f"✅ MergedVTK saved to {outPath}")
+            self.log_info(f"MergedVTK saved to {outPath}")
 
         except Exception as e:
             self.log_error(f"Error exporting MergedVTK: {str(e)}")
@@ -706,7 +688,6 @@ class SegmentationLogic:
             for idx, segId in enumerate(segmentIDs, start=1):
                 self.log_info(f"PerLabelVTK: Segment {idx}/{total}")
                 
-                # Maintenir Slicer réactif pendant le traitement de chaque segment
                 slicer.app.processEvents()
 
                 segment = segmentation.GetSegment(segId)
@@ -740,7 +721,7 @@ class SegmentationLogic:
                 flatN.SetFeatureAngle(180)
                 flatN.Update()
 
-                # Décimation
+                # Decimation
                 self.log_info(f"PerLabelVTK: Decimating {segment.GetName()}")
                 dec = vtk.vtkQuadricDecimation()
                 dec.SetInputConnection(flatN.GetOutputPort())
@@ -778,7 +759,7 @@ class SegmentationLogic:
             self.log_error(f"Error exporting VTKPerLabel: {str(e)}")
     
     def _cleanupAfterCase(self, volumeNode, segmentationNode):
-        """Nettoyage après traitement d'un cas"""
+        """Cleanup after each case"""
         try:
             self.log_info("Starting cleanup")
             
@@ -789,7 +770,7 @@ class SegmentationLogic:
             if volumeNode and slicer.mrmlScene.IsNodePresent(volumeNode):
                 slicer.mrmlScene.RemoveNode(volumeNode)
             
-            # Nettoyage mémoire CUDA
+            # Clean CUDA memory
             try:
                 import torch
                 if torch.cuda.is_available():
@@ -808,11 +789,11 @@ class SegmentationLogic:
             self.log_error(f"Cleanup error: {str(e)}")
     
     def stop(self):
-        """Arrête le traitement"""
+        """Stop process"""
         self.log_info("Stop requested - canceling segmentation...")
         self.isStopping = True
         
-        # Arrêter la logique de segmentation si elle existe
+        # Stop the logic
         if self.logic:
             try:
                 self.logic.stopSegmentation()
@@ -820,7 +801,7 @@ class SegmentationLogic:
             except Exception as e:
                 self.log_error(f"Error stopping segmentation logic: {str(e)}")
         
-        # Forcer le nettoyage mémoire
+        #Cleaning
         try:
             import torch
             if torch.cuda.is_available():
@@ -835,7 +816,7 @@ class SegmentationLogic:
     
     @staticmethod
     def isNNUNetModuleInstalled():
-        """Vérifie si le module NNUNet est installé"""
+        """Check if nnunet is installed"""
         try:
             import SlicerNNUNetLib
             return True
@@ -843,7 +824,7 @@ class SegmentationLogic:
             return False
     
     def _installNNUNetIfNeeded(self) -> bool:
-        """Installe NNUNet si nécessaire"""
+        """Install NNUNet if necessary"""
         try:
             from SlicerNNUNetLib import InstallLogic
             logic = InstallLogic()
@@ -854,7 +835,7 @@ class SegmentationLogic:
             return False
     
     def _createSlicerSegmentationLogic(self):
-        """Crée la logique de segmentation Slicer"""
+        """Create segmentation logic"""
         if not self.isNNUNetModuleInstalled():
             return None
         try:
@@ -874,27 +855,28 @@ class SegmentationLogic:
         return fileDir.joinpath("VFACE", "Resources", "ML").resolve()
 
 
-# ─── Fonctions utilitaires ─────────────────────────────────────────────────────
+# ─── Utils functions ─────────────────────────────────────────────────────
 
 def run_dental_segmentation(input_folder, output_folder, model_name="DentalSegmentator", 
                            device="cuda", export_formats=None):
     """
-    Fonction principale pour lancer la segmentation dentaire
+    Main function to run dental segmentation
     
     Args:
-        input_folder: Chemin vers le dossier contenant les volumes à traiter
-        output_folder: Chemin vers le dossier de sortie
-        model_name: Nom du modèle à utiliser
-        device: Dispositif de calcul (cuda, cpu, mps)
-        export_formats: Formats d'export (par défaut STL + NIfTI)
+        input_folder: Path to the folder containing the volumes to be processed
+        output_folder: Path to the output folder
+        model_name: Name of the model to use
+        device: Computing device (cuda, cpu, mps)
+        export_formats: Export formats (default STL + NIfTI)
     
     Returns:
-        bool: True si succès, False sinon
+        bool: True if successful, False otherwise
     """
+
     if export_formats is None:
         export_formats = ExportFormat.STL | ExportFormat.NIFTI
     
-    # Création de l'instance de logique
+    # Create Logic instance
     logic = SegmentationLogic()
     
     try:

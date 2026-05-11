@@ -701,7 +701,6 @@ class AMASSSWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # on choisit firefox si dispo
     browser = 'firefox' if shutil.which('firefox') else 'xdg-open'
     env = os.environ.copy()
-    # empêche le chargement d’atk-bridge
     env['NO_AT_BRIDGE'] = '1'
     subprocess.Popen(
         [browser, url],
@@ -984,19 +983,18 @@ class AMASSSWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
   def UpdateRunBtn(self):
     self.ui.PredictionButton.setEnabled(self.scan_ready and self.model_ready)
-    # self.ui.PredictionButton.setEnabled(True)
 
   def onProcessUpdate(self, caller, event):
-      # Met à jour le timer
+      # Update timer
       elapsed = time.time() - self.startTime
       self.ui.TimerLabel.setText(f"Time : {elapsed:.2f}s")
 
       status = caller.GetStatus()
 
-      # 1) Si le CLI est terminé :
+      # 1) When CLI over:
       if status & caller.Completed:
           if status & caller.ErrorsMask:
-              # Gestion de l’erreur
+
               errorText = caller.GetErrorText()
               qt.QMessageBox.critical(
                   slicer.util.mainWindow(),
@@ -1004,22 +1002,22 @@ class AMASSSWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                   f"Une erreur est survenue :\n\n{errorText}"
               )
           else:
-              # Fin normale du process
+              # End process
               self.OnEndProcess()
           return
 
-      # 2) Sinon, on est toujours en cours – calcul de la progression
+      #Display progression
       progress = caller.GetProgress()
       if progress > 1:
           progress /= 100.0
 
-      # Nombre de scans prêts
+      # Number of ready scan 
       done_scans = int(round(progress * self.scan_count))
       self.ui.PredScanLabel.setText(
           f"Scan ready for segmentation : {done_scans} / {self.scan_count}"
       )
 
-      # Nombre de structures segmentées
+      # Number of segmented structures
       done_segs = int(round(progress * self.total_seg_progress))
 
       self.ui.PredSegLabel.setText(

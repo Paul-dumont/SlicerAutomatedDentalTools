@@ -157,18 +157,18 @@ def main(args):
                 with open(output_filepath, 'w', encoding='utf-8') as f:
                     f.write(formatted_response)
 
-                logger.info(f"✓ Saved: {output_filepath}")
+                logger.info(f"Saved: {output_filepath}")
                 successfully_processed += 1
 
             except Exception as e:
-                logger.error(f"✗ ERROR processing {filename}: {e}", file=sys.stderr)
+                logger.error(f"ERROR processing {filename}: {e}", file=sys.stderr)
                 failed_files.append(filename)
                 traceback.print_exc(file=sys.stderr)
                 continue
         logger.info(f"Processing complete:")
-        logger.info(f"  ✓ Successfully processed: {successfully_processed}/{total_files}")
+        logger.info(f"Successfully processed: {successfully_processed}/{total_files}")
         if failed_files:
-            logger.info(f"  ✗ Failed files: {', '.join(failed_files)}")     
+            logger.info(f"Failed files: {', '.join(failed_files)}")     
 
     except ImportError:
         logger.error("ERROR: 'llama-cpp-python' library is not installed in Slicer.", file=sys.stderr)

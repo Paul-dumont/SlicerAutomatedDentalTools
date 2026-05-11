@@ -1452,8 +1452,8 @@ class WidgetParameter:
         
 
     def handleStackedWidgetChange(self, index):
-        # Lorsque le stackedWidget change de page, cette méthode est appelée.
-        # Vérifiez si la nouvelle page est la page 0 (index 0) et appelez hideLandmark si c'est le cas.
+        # When stackedWidget change of page, this is called.
+        # Check if the new page is page 0 (index 0) and called hideLandmark if its the case.
         if index == 0:
             self.hideLandmark()
         else :
@@ -1705,9 +1705,9 @@ class WidgetParameter:
                 # Get data model
                 displayNode = self.surf.GetDisplayNode()
                 
-                # Récupérer tous les vtkMRMLViewNodes disponibles dans la scène
+                # Retrieve all availables vtkMRMLViewNodes in the scene
                 viewNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLViewNode')
-                viewNodes.UnRegister(None) # Désenregistrer pour éviter les fuites de mémoire
+                viewNodes.UnRegister(None) # Unregister to avoid memory leakage
                 
                 customLayoutId=501
                 layoutManager = slicer.app.layoutManager()
@@ -2228,7 +2228,7 @@ class WidgetParameter:
                 self.combobox_patch.addItem(number_to_add)
                 self.add_patch.setChecked(False)
                 index = self.combobox_patch.findText(number_to_add)  
-                if index >= 0:  # -1 signifie que la valeur n'a pas été trouvée
+                if index >= 0:  # -1 signify that the value hasn't been found
                     self.combobox_patch.setCurrentIndex(index)
             if not self.combobox_patch.isVisible():
                 self.displayComboBox(self.surf)
@@ -2260,7 +2260,7 @@ class WidgetParameter:
         Display the landmarks
         '''
         viewNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLViewNode')
-        viewNodes.UnRegister(None)  # Désenregistrer pour éviter les fuites de mémoire
+        viewNodes.UnRegister(None)  # Unregister to avoid memory leakage
 
         if self.curve!=None:
             displayNode = self.curve.GetDisplayNode()
@@ -2284,13 +2284,13 @@ class WidgetParameter:
         Hide the landmarks
         '''
         viewNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLViewNode')
-        viewNodes.UnRegister(None)  # Désenregistrer pour éviter les fuites de mémoire
+        viewNodes.UnRegister(None)  # Unregister to avoid memory leakage
 
         if self.curve!=None :
             displayNode = self.curve.GetDisplayNode()
             if displayNode is not None:
-                displayNode.SetVisibility2D(True)  # Rétablir la visibilité 2D
-                displayNode.SetVisibility3D(False)  # Masquer la visibilité 3D
+                displayNode.SetVisibility2D(True)  #Restore 2D view
+                displayNode.SetVisibility3D(False)  # Hide 3D view
 
                 view_ids_to_display = [viewNodes.GetItemAsObject(self.title-1).GetID()]
                 displayNode.SetViewNodeIDs(view_ids_to_display)
@@ -2298,8 +2298,8 @@ class WidgetParameter:
         if self.middle_point!=None :
             displayNode = self.middle_point.GetDisplayNode()
             if displayNode is not None:
-                displayNode.SetVisibility2D(True)  # Rétablir la visibilité 2D
-                displayNode.SetVisibility3D(False)  # Masquer la visibilité 3D
+                displayNode.SetVisibility2D(True)  #Restore 2D view
+                displayNode.SetVisibility3D(False)  # Hide 3D view
 
                 view_ids_to_display = [viewNodes.GetItemAsObject(self.title-1).GetID()]
                 displayNode.SetViewNodeIDs(view_ids_to_display)
@@ -2374,7 +2374,7 @@ class WidgetParameter:
         self.middle_point.AddControlPoint(center,'F1')
 
         viewNodes = slicer.mrmlScene.GetNodesByClass('vtkMRMLViewNode')
-        viewNodes.UnRegister(None)  # Désenregistrer pour éviter les fuites de mémoire
+        viewNodes.UnRegister(None)  # Unregister to avoid memory leakage
 
         displayNode = self.middle_point.GetDisplayNode()
         if displayNode is not None:
@@ -2495,8 +2495,8 @@ class WidgetParameter:
                 number_to_add = self.addItemsCombobox()
                 self.combobox_patch.addItem(number_to_add)
                 self.add_patch.setChecked(False)
-                index = self.combobox_patch.findText(number_to_add)  # Remplacez "VotreValeur" par la valeur que vous souhaitez sélectionner
-                if index >= 0:  # -1 signifie que la valeur n'a pas été trouvée
+                index = self.combobox_patch.findText(number_to_add)
+                if index >= 0:
                     self.combobox_patch.setCurrentIndex(index)
             if not self.combobox_patch.isVisible():
                 self.displayComboBox(self.surf)
@@ -2576,7 +2576,7 @@ class WidgetParameter:
                 if final_array is None:
                     final_array = current_tensor
                 else:
-                    # Utiliser une opération OR pour combiner les patches
+                    # Use ane operation OR to merge the patches
                     final_array = torch.logical_or(final_array, current_tensor).to(torch.float32)
                 
                 index += 1

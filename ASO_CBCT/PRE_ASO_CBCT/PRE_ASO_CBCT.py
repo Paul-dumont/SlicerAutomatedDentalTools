@@ -284,4 +284,4 @@ if __name__ == "__main__":
         sys.exit(e.code)
     except Exception as e:
         logger.critical(f"Fatal error in entry point: {e}")
-        sys.exit(f"❌ Fatal error: {e}")
+        sys.exit(f"Fatal error: {e}")
