@@ -51,7 +51,7 @@ def crop_cbct(img_path, output_folder):
     
     direction = image.GetDirection()
     direction_matrix = np.array(direction).reshape(3, 3)
-    if direction_matrix[0, 0] < 0:  # X axis is flipped → need to swap
+    if direction_matrix[0, 0] < 0:  # X axis is flipped then need to swap
         logger.info("[INFO] Flipped X-axis detected. Swapping left and right labels.")
         left, right = right, left
 

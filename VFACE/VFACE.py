@@ -896,37 +896,37 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # Check and install joblib
             try:
                 import joblib
-                logger.info(f"✓ joblib is already installed (version: {joblib.__version__})")
+                logger.info(f"joblib is already installed (version: {joblib.__version__})")
             except ImportError:
-                logger.warning("✗ joblib not found, installing...")
+                logger.warning("joblib not found, installing...")
                 try:
                     logger.info("Installing joblib...")
                     slicer.util.pip_install('joblib')
                     import joblib
-                    logger.info(f"✓ joblib successfully installed (version: {joblib.__version__})")
+                    logger.info(f"joblib successfully installed (version: {joblib.__version__})")
                 except Exception as e:
-                    logger.error(f"✗ Failed to install joblib: {str(e)}")
+                    logger.error(f"Failed to install joblib: {str(e)}")
                     raise
             
             # Check and install lightgbm
             try:
                 import lightgbm
-                logger.info(f"✓ lightgbm is already installed (version: {lightgbm.__version__})")
+                logger.info(f"lightgbm is already installed (version: {lightgbm.__version__})")
             except ImportError:
-                logger.warning("✗ lightgbm not found, installing...")
+                logger.warning("lightgbm not found, installing...")
                 try:
                     logger.info("Installing lightgbm... (this may take a while)")
                     slicer.util.pip_install('lightgbm')
                     import lightgbm
-                    logger.info(f"✓ lightgbm successfully installed (version: {lightgbm.__version__})")
+                    logger.info(f"lightgbm successfully installed (version: {lightgbm.__version__})")
                 except Exception as e:
-                    logger.error(f"✗ Failed to install lightgbm: {str(e)}")
+                    logger.error(f"Failed to install lightgbm: {str(e)}")
                     raise
             
             logger.info("=== Python dependencies check completed ===")
             logger.info("--- Downloading model files ---")
             self.DownloadAllFiles()
-            logger.info("✓ All dependencies have been successfully installed")
+            logger.info("All dependencies have been successfully installed")
             
         except Exception as e:
             logger.error(f"Error during dependency check: {e}")
@@ -1261,20 +1261,20 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             logger.info(f"{self.module_name} is executed.")
             self.ui.label_3.setText(f"Process : {self.module_name} ({self.ActualProcess}/{self.NumberProcess})")
             
-            # Pour les processus Python longs, utiliser un timer pour maintenir la réactivité
+            # For long Python process, use a timer to maintain reactivity
             self.python_process = process
             self.python_parameters = parameters
             self.python_process_completed = False
             self.python_process_error = None
             
-            # Démarrer le processus dans un timer pour permettre les processEvents
+            #Start process with a timer
             self.startPythonProcess()
 
     def startPythonProcess(self):
-        """Démarre un processus Python avec gestion de la réactivité"""
+        """Start a Python process"""
         try:
             if callable(self.python_process):
-                # Exécuter le processus
+                # Execute the process
                 result = self.python_process(**self.python_parameters)
                 logger.info(f"Result of {self.module_name}: {result}")
                 self.python_process_completed = True
@@ -1290,16 +1290,14 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self.python_process_error = str(e)
             self.python_process_completed = True
         
-        # Programmer la vérification de fin de processus
         import qt
         qt.QTimer.singleShot(100, self.checkPythonProcessStatus)
 
     def checkPythonProcessStatus(self):
-        """Vérifie le statut du processus Python"""
+        """Check Python process status"""
         if self.python_process_completed:
             self.onProcessCompleted()
         else:
-            # Continuer à vérifier le statut
             import qt
             qt.QTimer.singleShot(100, self.checkPythonProcessStatus)
 
@@ -1353,7 +1351,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                         return
             
             try:
-                # Exécuter le processus suivant
+                # Run next process
                 self.ui.progressBar.setValue(0)
                 self.executeProcess(self.list_process[0])
                 self.ActualProcess += 1

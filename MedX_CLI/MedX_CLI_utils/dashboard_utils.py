@@ -49,13 +49,12 @@ def set_tenderness_data(df):
     tenderness_metrics = ["muscle_tenderness_present", "muscle_stiffness_present", "muscle_soreness_present"]
     def classify_row(row):
         vals = [str(row[col]).strip().lower() for col in tenderness_metrics]
-        # Si au moins une colonne n'est pas false/unknown/vide → true
+        # If at least a column is not false/unknown/vide return true
         if any(v not in ["false", "unknown", ""] for v in vals):
             return "true"
-        # Si toutes les colonnes sont false → false
+        # If all columns are false return false
         elif all(v == "false" for v in vals):
             return "false"
-        # Sinon (au moins une unknown ou vide) → unknown 
         else:
             return "unknown"
 

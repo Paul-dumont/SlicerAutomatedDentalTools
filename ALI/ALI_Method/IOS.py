@@ -86,14 +86,12 @@ class Auto_IOS(Method):
         csv_file = os.path.join(folder_path,f"{name_csv}.csv")
         with open(csv_file, 'w', newline='') as fichier:
             writer = csv.writer(fichier)
-            # Écrire l'en-tête du CSV
             writer.writerow(["surf"])
 
             # Parcourir le dossier et ses sous-dossiers
             for root, dirs, files in os.walk(input_dir):
                 for file in files:
                     if file.endswith(".vtk") or file.endswith(".stl"):
-                        # Écrire le chemin complet du fichier dans le CSV
                         if platform.system() != "Windows" and not self.is_wsl():    
                             writer.writerow([os.path.join(root, file)])
                         else :

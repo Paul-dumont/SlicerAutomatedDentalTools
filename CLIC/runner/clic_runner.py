@@ -3,13 +3,13 @@
 clic_runner.py
 ==============
 
-Exécuté par Slicer via self.conda.condaRunFilePython.
-– Charge un scan .nii(.gz)
-– Applique un Mask-R-CNN 2D slice-wise
-– Sauvegarde la segmentation
-– Envoie la progression & les logs sur stdout.
+Executed by Slicer via self.conda.condaRunFilePython.
+– Load a scan .nii(.gz)
+– Apply the Mask-R-CNN 2D slice-wise
+– Save the segmentation
+– Send progression & logs on stdout.
 
-Les messages stdout doivent commencer par :
+The stdout messages should start by:
   [PROGRESS] <0-100>
   [LOG]      <texte>
   [SEG]      <chemin_nii_gz>
@@ -72,7 +72,7 @@ def main():
     suffix      = P.get("suffix", "seg")
     device      = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # 1. Modèle ───────────────────────────────────────────────────────────────
+    # 1. Model ───────────────────────────────────────────────────────────────
     state = sorted(model_dir.glob("*.pth"))[0]
     model = _blank_model(4)
     model.load_state_dict(torch.load(state, map_location=device))
@@ -96,14 +96,14 @@ def main():
             seg[..., z][mk] = int(lb)
         progress(int((z + 1) * 100 / Z))
 
-    # 3. Sauvegarde ───────────────────────────────────────────────────────────
+    # 3. Save ───────────────────────────────────────────────────────────
     out_dir  = out_root / inp.stem
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{inp.stem}_{suffix}.nii.gz"
     nib.save(nib.Nifti1Image(seg.astype(np.int16), nii.affine, nii.header),
              str(out_path))
     seg_out(str(out_path))
-    log("✓ Finished")
+    log("Finished")
 
 
 if __name__ == "__main__":

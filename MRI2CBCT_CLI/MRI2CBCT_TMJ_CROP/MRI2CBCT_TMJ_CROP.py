@@ -37,9 +37,9 @@ MARGIN       = 3                          # voxels besides B-box
 PROBA_THR    = 0.02
 FIXED_BBOX_VOXELS = [400, 400, 400]       # set to None to disable fixed box; otherwise [sx,sy,sz] in voxels
 
-# ── OUTILS ──────────────────────────────────────────────────────────
+# ── Tools ──────────────────────────────────────────────────────────
 def crop_with_affine(img: nib.Nifti1Image, start: np.ndarray, end: np.ndarray) -> nib.Nifti1Image:
-    """Sous-volume [start,end[ en conservant la géométrie monde."""
+    """Beneath-volume [start,end[ and keep world geometry."""
     data   = img.get_fdata()
     affine = img.affine.copy()
     sub    = data[start[0]:end[0], start[1]:end[1], start[2]:end[2]]
@@ -71,8 +71,8 @@ def nnunet_predict(case_dir: Path, out_dir: Path, model_folder: Path) -> None:
 def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], tmp_dir: Path, out_dir: Path, model_folder: Path) -> None:
     def crop_by_world_corners(img: nib.Nifti1Image, corners_world: np.ndarray) -> tuple[Optional[nib.Nifti1Image], Optional[tuple[np.ndarray, np.ndarray]]]:
         """
-        Coupe `img` avec la B-box définie par 8 coins en coordonnées monde.
-        Retourne (volume_coupé, (imin, imax)) ou (None, None) si intersection nulle.
+        Crop `img` with the B-box determined by 8 edges in world coordinates
+        Return (volume_crop, (imin, imax)) ou (None, None) if no intersection.
         """
         inv   = np.linalg.inv(img.affine)
         ijk   = (inv @ np.c_[corners_world, np.ones(8)].T)[:3].T
@@ -86,7 +86,7 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
 
     def _save(vol: Optional[nib.Nifti1Image], file_name: str, folder_name: str):
             if vol is None:
-                logger.info(f"  ↳ {file_name}: intersection nulle (non sauvegardé)")
+                logger.info(f"{file_name}: No intersection (not save)")
             else:
                 if not os.path.exists(os.path.join(out_dir,folder_name)):
                     os.makedirs(os.path.join(out_dir,folder_name))
@@ -98,7 +98,7 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     
     name = cbct_path.stem.split(".")[0]
     name = name.split("_")[0]
-    logger.info(f"\n▶ {name}")
+    logger.info(f"\n{name}")
 
     cbct = nib.load(cbct_path)
     mri  = nib.load(mri_path)
@@ -156,7 +156,7 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
         # best-effort save, do not fail the pipeline
         pass
     if mask.sum() == 0:
-        logger.info("No voxel — ignored")
+        logger.info("No voxel ignored")
         return
 
     nz   = np.array(np.nonzero(mask))
@@ -203,7 +203,7 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     
     if mri_crop is not None:
         from nibabel.processing import resample_from_to
-        # cible = (shape, affine) du MRI croppé
+        # cible = (shape, affine) crop MRI
         cbct_on_mri = resample_from_to(cbct, (mri_crop.shape, mri_crop.affine), order=1)
         _save(cbct_on_mri, f"{name}_CBCT_TMJ_crop{side}.nii.gz","CBCT")
         pred_on_mri = resample_from_to(nib.load(seg_path),
@@ -217,7 +217,6 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
             _save(mask_on_mri, f"{name}_Mask_TMJ_crop{side}.nii.gz","CBCT seg")
         except Exception:
             pass
-    logger.info("── finished.")
 
 
 # ── MAIN ────────────────────────────────────────────────────────────
@@ -237,7 +236,7 @@ def main(args):
             logger.info(f"Skipping {pid}: missing CBCT, MRI, or SEG")
             continue
 
-        logger.info(f"\n▶ Patient: {pid}")
+        logger.info(f"\nPatient: {pid}")
         logger.info(f"   CBCT: {cbct_path}")
         logger.info(f"   MRI:  {mri_path}")
         logger.info(f"   SEG:  {seg_path}")

@@ -70,7 +70,7 @@ def create_csv(input:str,output_resample:str,output_csv:str,name_csv:str):
         info = get_nifti_info(file,output_resample)
         nifti_info.append(info)
 
-    # Créez un seul DataFrame avec toutes les informations
+    # Create only one DataFrame with all informations
     df = pd.DataFrame(nifti_info)
     outpath = os.path.join(output_csv,name_csv)
     df.to_csv(outpath, index=False)
