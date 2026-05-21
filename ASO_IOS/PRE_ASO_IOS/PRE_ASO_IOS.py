@@ -148,7 +148,7 @@ def main(args):
             
             if not dic_teeth["Upper"] and not dic_teeth["Lower"]:
                 raise ValueError("No valid teeth identified from input list")
-            logger.info(f"Teeth dictionary built: Upper={len(dic_teeth['Upper'])}, Lower={len(dic_teeth['Lower'])}")
+            logger.info(f"Teeth dictionary built: Upper={dic_teeth['Upper']}, Lower={dic_teeth['Lower']}")
         except (ValueError, KeyError) as e:
             logger.error(f"Teeth dictionary parsing failed: {str(e)}")
             error_details.append({"stage": "teeth_parsing", "message": str(e)})
@@ -286,8 +286,8 @@ def main(args):
         logger.debug("Stage 7: Initializing ICP registration methods")
         try:
             Method = [InitIcp(), vtkICP()]
-            option_upper = vtkMeanTeeth(dic_teeth["Upper"])
-            option_lower = vtkMeanTeeth(dic_teeth["Lower"])
+            option_upper = vtkMeanTeeth(dic_teeth["Upper"],property="Universal_ID")
+            option_lower = vtkMeanTeeth(dic_teeth["Lower"],property="Universal_ID")
             icp_upper = ICP(Method, option=option_upper)
             icp_lower = ICP(Method, option=option_lower)
             icp = {"Upper": icp_upper, "Lower": icp_lower}

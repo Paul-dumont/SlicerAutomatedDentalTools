@@ -1025,8 +1025,6 @@ def GetPatients(folder_path):
             .split("_Scan")[0]
             .split("_lm")[0]
             .split(".")[0]
-            .split("_T1")[0]
-            .split("_T2")[0]
         )
 
         if patient not in patients.keys():

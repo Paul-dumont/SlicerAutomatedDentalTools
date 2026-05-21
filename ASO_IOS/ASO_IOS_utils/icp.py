@@ -372,7 +372,7 @@ class vtkTeeth:
                 out = label
                 if Preference == label:
                     out = Preference
-                    continue
+                    break
 
         return out
 
