@@ -110,7 +110,7 @@ def PrePreAso(source, target, landmarks):
     if len(landmarks) == 4:
         meanTeeth = vtkMeanTeeth(
             [int(left), int(middle[0]), int(middle[1]), int(right)],
-            property="PredictedID",
+            property="Universal_ID",
         )
         mean_source = meanTeeth(source)
         mean_target = meanTeeth(target)
@@ -128,7 +128,7 @@ def PrePreAso(source, target, landmarks):
 
     else:
         meanTeeth = vtkMeanTeeth(
-            [int(left), int(middle[0]), int(right)], property="PredictedID"
+            [int(left), int(middle[0]), int(right)], property="Universal_ID"
         )
         mean_source = meanTeeth(source)
         mean_target = meanTeeth(target)
