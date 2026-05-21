@@ -62,8 +62,7 @@ def align_by_landmarks(moving_mesh, moving_lms, fixed_lms):
 
 def run_icp_point_to_plane(moving_mesh, fixed_mesh, max_dist=1.5):
     """
-    Enregistrement ICP Point-to-Plane sans Open3D
-    Utilise PyVista et VTK pour l'alignement de maillages
+    ICP Point-to-Plane
     """
     from scipy.spatial import cKDTree
     from scipy.spatial.transform import Rotation
@@ -81,7 +80,7 @@ def run_icp_point_to_plane(moving_mesh, fixed_mesh, max_dist=1.5):
     transformation = np.eye(4)
     moving_pts_transformed = moving_pts.copy()
     
-    print("Optimisation Point-to-Plane en cours...")
+    print("Optimisation Point-to-Plane on going...")
     
     max_iterations = 2000
     prev_rmse = np.inf
@@ -109,7 +108,7 @@ def run_icp_point_to_plane(moving_mesh, fixed_mesh, max_dist=1.5):
         fitness_change = abs(prev_fitness - fitness)
         
         if rmse_change < rmse_threshold and fitness_change < fitness_threshold:
-            print(f"Convergence atteinte à l'itération {iteration}")
+            print(f"Convergence reached at iteration {iteration}")
             break
         
         prev_rmse = inlier_rmse
@@ -117,7 +116,7 @@ def run_icp_point_to_plane(moving_mesh, fixed_mesh, max_dist=1.5):
         
         # 3. Calcul of the transformation (Point-to-Plane with SVD)
         if len(valid_indices) < 3:
-            print(f"Itération {iteration}: Pas assez de correspondances")
+            print(f"Iteration {iteration}: Not enough correspondances")
             break
         
         # corresponding Points 
@@ -154,12 +153,12 @@ def run_icp_point_to_plane(moving_mesh, fixed_mesh, max_dist=1.5):
         moving_pts_transformed = (moving_pts_homogeneous @ transformation.T)[:, :3]
         
         if (iteration + 1) % 100 == 0 or iteration < 10:
-            print(f"  Itération {iteration + 1}: RMSE = {inlier_rmse:.6f}, Fitness = {fitness:.4f}")
+            print(f"  Iteration {iteration + 1}: RMSE = {inlier_rmse:.6f}, Fitness = {fitness:.4f}")
     
     # 5. Apply final transformation
     final_mesh = moving_mesh.transform(transformation, inplace=False)
     
-    print(f"ICP Terminé. Fitness: {fitness:.4f}, Inlier RMSE: {inlier_rmse:.4f}")
+    print(f"ICP Finished. Fitness: {fitness:.4f}, Inlier RMSE: {inlier_rmse:.4f}")
     
     return final_mesh, transformation
 
