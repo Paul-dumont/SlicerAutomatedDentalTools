@@ -1198,23 +1198,53 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     def onPredictButton(self):
         if "CBCT" in self.type:
-            monai_version = '==1.5.0' if sys.version_info >= (3, 10) else '==0.7.0'            
-            if platform.system() == "Windows":
-                list_libs_CBCT_windows = [('itk','==5.4.0',None),('itk-elastix','==0.19.2',None),('dicom2nifti', '==2.3.0',None),('pydicom', '==2.2.2',None),('einops',None,None),('nibabel',None,None),('connected-components-3d','>=3.13.0',None),
-                            ('pandas',None,None),('torch','<2.6.0',"https://download.pytorch.org/whl/cu118")] #(lib_name, version, url)
-                list_libs_CBCT_windows.append(('monai', monai_version, None))
-
-                is_installed = install_function(self,list_libs_CBCT_windows)
-            else:
-                # libraries and versions compatibility to use AREG_CBCT
-                list_libs_CBCT = [('itk','==5.4.0',None),('itk-elastix','==0.19.2',None),('dicom2nifti', '==2.3.0',None),('pydicom', '==2.2.2',None),('einops',None,None),('nibabel',None,None),('connected-components-3d','>=3.13.0',None),
-                            ('pandas',None,None),('torch','<2.6.0',None)] #(lib_name, version, url)
-
-                list_libs_CBCT.append(('monai', monai_version, None))
-
-                is_installed = install_function(self,list_libs_CBCT)
+            # 1. Coordinate MONAI and PyTorch versions based on Python version
+            if sys.version_info >= (3, 10):
+                monai_version = '==1.3.2'
+                torch_version = '==2.2.2'
                 
-        if "IOS" in self.type:
+            if platform.system() == "Windows":
+                list_libs_CBCT_windows = [
+                    ('itk', '==5.4.0', None),
+                    ('itk-elastix', '==0.19.2', None),
+                    ('dicom2nifti', '==2.3.0', None),
+                    ('pydicom', '==2.2.2', None),
+                    ('einops', None, None),
+                    ('nibabel', None, None),
+                    ('connected-components-3d', '>=3.13.0', None),
+                    ('pandas', None, None),
+                    ('torch', torch_version, "https://download.pytorch.org/whl/cu118")
+                ]
+                list_libs_CBCT_windows.append(('monai', monai_version, None))
+                is_installed = install_function(self, list_libs_CBCT_windows)
+                
+            else:
+                # macOS / Linux
+                list_libs_CBCT = [
+                    ('itk', '==5.4.0', None),
+                    ('itk-elastix', '==0.19.2', None),
+                    ('dicom2nifti', '==2.3.0', None),
+                    ('pydicom', '==2.2.2', None),
+                    ('einops', None, None),
+                    ('nibabel', None, None),
+                    ('connected-components-3d', '>=3.13.0', None),
+                    ('pandas', None, None),
+                    ('numpy', '<2.0.0', None),
+                    ('torch', torch_version, None),
+                    ('torchvision', "==0.17.0",None),('blosc2', None,None), 
+                    ('torchaudio',torch_version,None),('nnunetv2',None,None),
+                    ('monai', monai_version, None)
+                ]
+                is_installed = install_function(self, list_libs_CBCT)
+
+                import numpy as np
+                from packaging.version import Version
+
+                numpy_version = Version(np.__version__)
+                if numpy_version > Version("2.0"):
+                    pip_install("numpy<2.0.0")
+                
+        if self.type == "IOS":
             is_installed = False
             check_env = self.onCheckRequirements()
             logger.debug(f"Segmentation environment: {check_env}")
@@ -1256,7 +1286,6 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             isDCMInput=self.isDCMInput,
             OrientReference=self.CBCTOrientRef,
         )
-        logger.info("Test Process done")
 
         if isinstance(error, str):
             qt.QMessageBox.warning(self.parent, "Warning", error.replace(",", "\n"))

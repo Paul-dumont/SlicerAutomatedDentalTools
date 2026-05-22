@@ -55,9 +55,9 @@ def _norm(x2d: np.ndarray) -> np.ndarray:
     return (x2d - lo) / (hi - lo) if hi - lo > 1e-8 else np.zeros_like(x2d)
 
 
-log      = lambda s: logger.info(f"[LOG] {s}",      flush=True)
-progress = lambda p: logger.info(f"[PROGRESS] {p}", flush=True)
-seg_out  = lambda p: logger.info(f"[SEG] {p}",      flush=True)
+log      = lambda s: logger.info(f"[LOG] {s}")
+progress = lambda p: logger.info(f"[PROGRESS] {p}")
+seg_out  = lambda p: logger.info(f"[SEG] {p}")
 
 
 # ───────────────────────── main ─────────────────────────────────────────────
