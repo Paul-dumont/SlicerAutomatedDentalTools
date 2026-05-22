@@ -831,8 +831,8 @@ class AMASSSWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       # First, install the required libraries and their version
       try:
         list_libs = [
-          ('torch','2.6.0'),('torchvision', "0.21.0"),('blosc2', None), 
-          ('torchaudio',"2.6.0"),('itk', None), ('dicom2nifti', '2.3.0'), 
+          ('torch','2.2.2'),('torchvision', "0.17.0"),('torchaudio',"2.2.2"),
+          ('itk', None),('blosc2', None),('dicom2nifti', '2.3.0'), 
           ('pydicom', '2.2.2'),('einops',None),('nibabel',None),('nnunetv2',None)
         ]
         logger.info('Checking/installing required libraries...')
@@ -1032,6 +1032,7 @@ class AMASSSWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       
       if self.logic.cliNode is not None:
         try:
+          logger.info(self.logic.cliNode.GetOutputText())
           self.logic.cliNode.Cancel()
           logger.info('Process cancelled successfully')
         except Exception as e:
@@ -1062,7 +1063,7 @@ class AMASSSWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       
       try:
         output_text = self.logic.cliNode.GetOutputText()
-        logger.debug(f'Process output: {output_text}')
+        logger.info(f'Process output: {output_text}')
       except Exception as e:
         logger.warning(f'Could not retrieve process output: {e}')
 

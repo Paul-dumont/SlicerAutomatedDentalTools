@@ -49,6 +49,60 @@ for g,d in LABELS.items():
     for k,v in d.items():
         NAMES_FROM_LABELS[g][v] = k
 
+def wait_for_stable_output(process, output_path, timeout_s=900, poll_s=1.0, stable_checks=3, min_size_bytes=262144):
+    """Wait until process exits or output file exists with stable, significant size."""
+    start_t = time.time()
+    last_size = -1
+    stable_count = 0
+
+    while True:
+        rc = process.poll()
+
+        if os.path.isfile(output_path):
+            try:
+                cur_size = os.path.getsize(output_path)
+            except OSError:
+                cur_size = -1
+
+            if cur_size >= min_size_bytes:
+                if cur_size == last_size:
+                    stable_count += 1
+                else:
+                    stable_count = 1
+                    last_size = cur_size
+
+                if stable_count >= stable_checks:
+                    logger.info(
+                        f"Stable output detected ({cur_size} bytes) at {output_path}"
+                    )
+                    return True
+            else:
+                stable_count = 0
+                last_size = cur_size
+
+        if rc is not None:
+            if rc != 0:
+                raise subprocess.CalledProcessError(rc, process.args)
+
+            if os.path.isfile(output_path):
+                try:
+                    final_size = os.path.getsize(output_path)
+                except OSError:
+                    final_size = -1
+                logger.info(
+                    f"Prediction process exited cleanly; output found ({final_size} bytes)"
+                )
+                return True
+
+            raise FileNotFoundError(f"Process exited but output file is missing: {output_path}")
+
+        if (time.time() - start_t) > timeout_s:
+            raise TimeoutError(
+                f"Timeout waiting for stable output file: {output_path}"
+            )
+
+        time.sleep(poll_s)
+
 MODELS_GROUP = {
     "LARGE":{
         "FF":     {"MAND":1,"CB":2,"UAW":3,"MAX":4,"CV":5},
@@ -564,7 +618,11 @@ def main(args):
 
                         # Run nnUNet prediction
                         try:
-                            device = "cuda" if torch.cuda.is_available() else "cpu"
+                            if torch.cuda.is_available():
+                                device = "cuda"
+                            else:
+                                device = "cpu"
+                                
                             logger.info(f"Predicting {struct} on device: {device}")
                             
                             cmd = [
@@ -575,9 +633,32 @@ def main(args):
                                 "-c", "3d_fullres",
                                 "-f", "0",
                                 "-device", device,
-                                "--disable_tta"
+                                "--disable_tta",
                             ]
-                            subprocess.check_call(cmd)
+                            print(cmd)
+
+                            nifti_pred = os.path.join(outp, f"p_{case_id}.nii.gz")
+
+                            # Start prediction and keep checking output stability to avoid waiting only on process signal.
+                            proc = subprocess.Popen(cmd, stdout=None, stderr=None, close_fds=True)
+                            wait_for_stable_output(
+                                proc,
+                                nifti_pred,
+                                timeout_s=3600,
+                                poll_s=1.0,
+                                stable_checks=3,
+                                min_size_bytes=100,
+                            )
+
+                            if proc.poll() is None:
+                                logger.info("Stable output reached before process exit; stopping predictor process")
+                                proc.terminate()
+                                try:
+                                    proc.wait(timeout=5)
+                                except subprocess.TimeoutExpired:
+                                    proc.kill()
+                                    proc.wait(timeout=5)
+
                             logger.info(f"Prediction for {struct} completed")
                         except subprocess.CalledProcessError as e:
                             logger.error(f"nnUNet prediction failed for {struct}: {e}")
@@ -598,7 +679,6 @@ def main(args):
 
                         # Load prediction
                         try:
-                            nifti_pred = os.path.join(outp, f"p_{case_id}.nii.gz")
                             if not os.path.isfile(nifti_pred):
                                 logger.error(f"Prediction output not found: {nifti_pred}")
                                 raise FileNotFoundError(f"nnUNet output file not found: {nifti_pred}")
