@@ -20,7 +20,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -113,7 +113,7 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     cog_cbct = np.linalg.inv(cbct.affine)[:3, :3] @ cog_w + \
                np.linalg.inv(cbct.affine)[:3, 3]
     side = "Left" if cog_cbct[0] < mid else "Right"
-    logger.info("MRI side:", side)
+    logger.info(f"MRI side: {side}")
 
     
     ### ------------------------------------------------------------------ ###

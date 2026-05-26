@@ -411,7 +411,8 @@ def main():
             import pytorch3d
             logger.info(f"PyTorch3D: {pytorch3d.__version__}")
             logger.info("GPU support: Verified")
-            logger.info("CUDA toolkit: Installed" if cuda_available else "Limited")
+            log = "Installed" if cuda_available else "Limited"
+            logger.info(f"CUDA toolkit: {log}")
             logger.info("="*60)
         else:
             logger.info("="*60)

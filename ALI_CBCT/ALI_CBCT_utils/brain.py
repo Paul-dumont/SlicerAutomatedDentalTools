@@ -173,5 +173,5 @@ class Brain:
 
     def LoadModels(self,model_lst):
         for n,net in enumerate(self.networks):
-            logger.info("Loading model", model_lst[self.network_scales[n]])
+            logger.info(f"Loading model {model_lst[self.network_scales[n]]}")
             net.load_state_dict(torch.load(model_lst[self.network_scales[n]],map_location=self.device))

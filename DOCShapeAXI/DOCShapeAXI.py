@@ -25,7 +25,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -890,7 +890,7 @@ class DOCShapeAXILogic(ScriptedLoadableModuleLogic):
       conda_exe = self.conda.getCondaExecutable()
       command = [conda_exe, "run", "-n", self.name_env, "python" ,"-c", f"\"import {file} as check;import os; print(os.path.isfile(check.__file__))\""]
       result = self.conda.condaRunCommand(command)
-      logger.info("output CHECK python path: ", result)
+      logger.info(f"output CHECK python path: {result}")
       if "True" in result :
           return True
       return False
@@ -907,7 +907,7 @@ class DOCShapeAXILogic(ScriptedLoadableModuleLogic):
       conda_exe = self.conda.getCondaExecutable()
       argument = [conda_exe, 'env', 'config', 'vars', 'set', '-n', self.name_env, pythonpath_arg]
       results = self.conda.condaRunCommand(argument)
-      logger.info("output GIVE python path: ", results)
+      logger.info(f"output GIVE python path: {results}")
 
   def windows_to_linux_path(self,windows_path):
     '''
@@ -949,7 +949,7 @@ class DOCShapeAXILogic(ScriptedLoadableModuleLogic):
 
       user = self.conda.getUser()
       command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-      logger.info("command_to_execute in condaRunCommand : ",command_to_execute)
+      logger.info(f"command_to_execute in condaRunCommand : {command_to_execute}")
 
       self.subpro = subprocess.Popen(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                               text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),
@@ -962,7 +962,7 @@ class DOCShapeAXILogic(ScriptedLoadableModuleLogic):
       for com in command :
           command_execute = command_execute+ " "+com
 
-      logger.info("command_execute dans conda run : ",command_execute)
+      logger.info(f"command_execute dans conda run : {command_execute}")
       self.subpro = subprocess.Popen(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(), executable="/bin/bash", preexec_fn=os.setsid)
   
     self.stdout, self.stderr = self.subpro.communicate()

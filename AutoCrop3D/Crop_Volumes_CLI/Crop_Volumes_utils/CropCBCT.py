@@ -12,7 +12,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 #import multiprocessing as mp
@@ -36,7 +36,8 @@ def Crop(ScanList, InputPath, ROI_Path, OutputPath, suffix_namefile ):
 
             img = sitk.ReadImage(patient_path)
 
-            logger.info("working on patient: "+str(patient))
+            str_patient = str(patient)
+            logger.info(f"working on patient: {str_patient}")
             ROI = json.load(open(ROI_Path))['markups'][0]
             ROI_Center = np.array(ROI['center'])
             ROI_Size = np.array(ROI['size'])

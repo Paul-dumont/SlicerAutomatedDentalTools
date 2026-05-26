@@ -201,7 +201,7 @@ class Auto_IOS(Method):
             name, extension = os.path.splitext(basename)
             if self.__isSegmented__(file):
                 new_name = f"{name}_Seg{extension}"
-                logger.info("New_name : ",new_name)
+                logger.info(f"New_name : {new_name}")
                 shutil.copy(file, os.path.join(folder_bypass, new_name))
 
             else:

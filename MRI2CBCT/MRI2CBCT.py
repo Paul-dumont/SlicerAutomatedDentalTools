@@ -47,7 +47,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -1535,8 +1535,8 @@ QSlider::handle:horizontal:hover {
         self.onProcessStarted()
         
         # /!\ Launch of the first process /!\
-        logger.info("module name : ",self.list_Processes_Parameters[0]["Module"])
-        logger.info("Parameters TMJ Crop: ",self.list_Processes_Parameters[0]["Parameter"])
+        logger.info(f"module name : {self.list_Processes_Parameters[0]["Module"]}")
+        logger.info(f"Parameters TMJ Crop: {self.list_Processes_Parameters[0]["Parameter"]}")
         
         self.process = slicer.cli.run(
                 self.list_Processes_Parameters[0]["Process"],
@@ -1603,8 +1603,8 @@ QSlider::handle:horizontal:hover {
         self.onProcessStarted()
         
         # /!\ Launch of the first process /!\
-        logger.info("module name : ",self.list_Processes_Parameters[0]["Module"])
-        logger.info("Parameters : ",self.list_Processes_Parameters[0]["Parameter"])
+        logger.info(f"module name : {self.list_Processes_Parameters[0]["Module"]}")
+        logger.info(f"Parameters : {self.list_Processes_Parameters[0]["Parameter"]}")
         
         self.process = slicer.cli.run(
                 self.list_Processes_Parameters[0]["Process"],
@@ -1654,8 +1654,8 @@ QSlider::handle:horizontal:hover {
         self.onProcessStarted()
         
         # /!\ Launch of the first process /!\
-        logger.info("module name : ",self.list_Processes_Parameters[0]["Module"])
-        logger.info("Parameters : ",self.list_Processes_Parameters[0]["Parameter"])
+        logger.info(f"module name : {self.list_Processes_Parameters[0]["Module"]}")
+        logger.info(f"Parameters : {self.list_Processes_Parameters[0]["Parameter"]}")
         
         self.process = slicer.cli.run(
                 self.list_Processes_Parameters[0]["Process"],
@@ -1767,8 +1767,8 @@ QSlider::handle:horizontal:hover {
         self.onProcessStarted()
         
         # /!\ Launch of the first process /!\
-        logger.info("module name : ",self.list_Processes_Parameters[0]["Module"])
-        logger.info("Parameters : ",self.list_Processes_Parameters[0]["Parameter"])
+        logger.info(f"module name : {self.list_Processes_Parameters[0]["Module"]}")
+        logger.info(f"Parameters : {self.list_Processes_Parameters[0]["Parameter"]}")
         
         self.process = slicer.cli.run(
                 self.list_Processes_Parameters[0]["Process"],
@@ -1929,8 +1929,8 @@ QSlider::handle:horizontal:hover {
         self.onProcessStarted()
         
         # /!\ Launch of the first process /!\
-        logger.info("module name : ",self.list_Processes_Parameters[0]["Module"])
-        logger.info("Parameters : ",self.list_Processes_Parameters[0]["Parameter"])
+        logger.info(f"module name : {self.list_Processes_Parameters[0]["Module"]}")
+        logger.info(f"Parameters : {self.list_Processes_Parameters[0]["Parameter"]}")
         
         self.process = slicer.cli.run(
                 self.list_Processes_Parameters[0]["Process"],
@@ -1985,8 +1985,8 @@ QSlider::handle:horizontal:hover {
         self.onProcessStarted()
         
         # /!\ Launch of the first process /!\
-        logger.info("module name : ",self.list_Processes_Parameters[0]["Module"])
-        logger.info("Parameters : ",self.list_Processes_Parameters[0]["Parameter"])
+        logger.info(f"module name : {self.list_Processes_Parameters[0]["Module"]}")
+        logger.info(f"Parameters : {self.list_Processes_Parameters[0]["Parameter"]}")
         
         self.process = slicer.cli.run(
                 self.list_Processes_Parameters[0]["Process"],
@@ -2082,7 +2082,7 @@ QSlider::handle:horizontal:hover {
 
                 logger.info(self.process.GetOutputText())
                 try:
-                    logger.info("name process : ",self.list_Processes_Parameters[0]["Process"])
+                    logger.info(f"name process : {self.list_Processes_Parameters[0]["Process"]}")
                     self.process = slicer.cli.run(
                         self.list_Processes_Parameters[0]["Process"],
                         None,
