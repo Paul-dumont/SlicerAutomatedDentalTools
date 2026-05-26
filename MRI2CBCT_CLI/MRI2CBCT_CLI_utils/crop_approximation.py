@@ -19,7 +19,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -44,7 +44,7 @@ def save_as_nifti(moving_tensor, static_path, output_path):
         new_nifti = nib.Nifti1Image(moving_tensor, static_nifti.affine, static_nifti.header)
     
     # Save the new NIfTI image to disk
-    logger.info("Saved registered image to:", output_path)
+    logger.info(f"Saved registered image to: {output_path}")
     nib.save(new_nifti, output_path)
 
 def save_affine_transform(matrix, output_path):

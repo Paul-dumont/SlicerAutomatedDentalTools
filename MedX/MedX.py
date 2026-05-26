@@ -44,7 +44,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -131,11 +131,11 @@ def install_function(self,list_libs:list):
                         pip_install(lib)
 
                     elif "https:/" in version_constraint:
-                        logger.info("version_constraint", version_constraint)
+                        logger.info(f"version_constraint {version_constraint}")
                         # download the library from the url
                         pip_install(version_constraint)
                     else:
-                        logger.info("version_constraint else", version_constraint)
+                        logger.info(f"version_constraint else {version_constraint}")
                         lib_version = f'{lib}{version_constraint}' if version_constraint else lib
                         pip_install(lib_version)
 
@@ -1177,7 +1177,7 @@ QSlider::handle:horizontal:hover {
 
                 logger.info(self.process.GetOutputText())
                 try:
-                    logger.info("name process : ",self.list_Processes_Parameters[0]["Process"])
+                    logger.info(f"name process : {self.list_Processes_Parameters[0]["Process"]}")
                     self.process = slicer.cli.run(
                             self.list_Processes_Parameters[0]["Process"],
                             None,
@@ -1411,7 +1411,7 @@ class MedXLogic(ScriptedLoadableModuleLogic):
         conda_exe = self.conda.getCondaExecutable()
         command = [conda_exe, "run", "-n", self.name_env, "python" ,"-c", f"\"import {file} as check;import os; print(os.path.isfile(check.__file__))\""]
         result = self.conda.condaRunCommand(command)
-        logger.info("output CHECK python path: ", result)
+        logger.info(f"output CHECK python path: {result}")
         if "True" in result :
             return True
         return False
@@ -1428,7 +1428,7 @@ class MedXLogic(ScriptedLoadableModuleLogic):
         conda_exe = self.conda.getCondaExecutable()
         argument = [conda_exe, 'env', 'config', 'vars', 'set', '-n', self.name_env, pythonpath_arg]
         results = self.conda.condaRunCommand(argument)
-        logger.info("output GIVE python path: ", results)
+        logger.info(f"output GIVE python path: {results}")
         
     def windows_to_linux_path(self,windows_path):
         '''
@@ -1478,7 +1478,7 @@ class MedXLogic(ScriptedLoadableModuleLogic):
 
             user = self.conda.getUser()
             command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-            logger.info("command_to_execute in condaRunCommand : ",command_to_execute)
+            logger.info(f"command_to_execute in condaRunCommand : {command_to_execute}")
 
             self.subpro = subprocess.Popen(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                               text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),
@@ -1490,7 +1490,7 @@ class MedXLogic(ScriptedLoadableModuleLogic):
             for com in command :
                 command_execute = command_execute+ " "+com
 
-            logger.info("command_to_execute in conda run : ",command_execute)
+            logger.info(f"command_to_execute in conda run : {command_execute}")
             self.subpro = subprocess.Popen(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(), executable="/bin/bash", preexec_fn=os.setsid)
     
         self.stdout, self.stderr = self.subpro.communicate()

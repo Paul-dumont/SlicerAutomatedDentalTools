@@ -16,7 +16,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -51,8 +51,8 @@ def resample_fn(img, args):
     center = args['center']
     rightSide = args['rightSide']
     isMRI = args['mri']
-    logger.info("Right side:", rightSide)
-    logger.info("Is MRI:", isMRI)
+    logger.info(f"Right side:{rightSide}")
+    logger.info(f"Is MRI:{isMRI}")
     
     if isMRI and rightSide and not center:
         logger.info("[INFO] Mirroring input image before resampling (index-space flip).")
@@ -230,7 +230,7 @@ def resample_images(args):
             else:
                 img = sitk.ReadImage(fobj["img"])
 
-            logger.info("Writing:", fobj["out"])
+            logger.info(f"Writing: {fobj["out"]}")
             writer = sitk.ImageFileWriter()
             writer.SetFileName(fobj["out"])
             writer.UseCompressionOn()

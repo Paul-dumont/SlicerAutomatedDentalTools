@@ -2174,7 +2174,7 @@ class ALILogic(ScriptedLoadableModuleLogic):
 
       user = self.conda.getUser()
       command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-      logger.info("command_to_execute in condaRunCommand : ",command_to_execute)
+      logger.info(f"command_to_execute in condaRunCommand : {command_to_execute}")
 
       self.subpro = subprocess.Popen(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                               text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),
@@ -2186,7 +2186,7 @@ class ALILogic(ScriptedLoadableModuleLogic):
         for com in command :
           command_execute = command_execute+ " "+com
 
-        logger.info("command_to_execute in conda run : ",command_execute)
+        logger.info(f"command_to_execute in conda run : {command_execute}")
         self.subpro = subprocess.Popen(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(), executable="/bin/bash", preexec_fn=os.setsid)
     import sys
     

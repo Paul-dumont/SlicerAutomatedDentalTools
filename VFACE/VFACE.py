@@ -14,7 +14,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -379,6 +379,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
         self.ui.CheckDependencyButton.connect("clicked(bool)", self.CheckDependency)
         self.ui.cancelButton.connect("clicked(bool)", self.onCancelButton)
+        self.ui.DefaultListButton.connect("clicked(bool)", self.onDefaultButton)
 
         self.ui.continueButton.setVisible(False)
         self.ui.continueButton.connect("clicked(bool)", self.onContinueButton)
@@ -648,7 +649,7 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             """
         
         # Apply standard style to most buttons
-        for buttonName in ['applyButton', 'CheckDependencyButton', 'continueButton']:
+        for buttonName in ['applyButton', 'CheckDependencyButton', 'continueButton','DefaultListButton']:
             if hasattr(self.ui, buttonName):
                 button = getattr(self.ui, buttonName)
                 button.setStyleSheet(standardButtonStyle)
@@ -941,9 +942,11 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         if text == "Visualization (Heatmaps)":
             self.ui.excellabel.setVisible(False)
             self.ui.PathLineEdit_3.setVisible(False)
+            self.ui.DefaultListButton.setVisible(False)
         else:
             self.ui.excellabel.setVisible(True)
             self.ui.PathLineEdit_3.setVisible(True)
+            self.ui.DefaultListButton.setVisible(True)
 
         self._checkCanApply()
 
@@ -1031,6 +1034,18 @@ class VFACEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             del self.list_process[0]
         else:
             self.OnEndProcess()
+    
+    def onDefaultButton(self):
+        if not os.path.exists(self.SlicerDownloadPath):
+            os.makedirs(self.SlicerDownloadPath)
+
+        self.DownloadUnzip(
+            url="https://github.com/DCBIA-OrthoLab/SlicerAutomatedDentalTools/releases/download/VFACE/DefaultList.zip",
+            directory=self.SlicerDownloadPath,
+            folder_name="V_FACE/DefaultList",
+        )
+        if os.path.exists(os.path.join(self.SlicerDownloadPath,"V_FACE/DefaultList")):
+            self.ui.PathLineEdit_3.setCurrentPath(os.path.join(self.SlicerDownloadPath,"V_FACE/DefaultList"))
 
     def onCancelButton(self) -> None:
         """
@@ -1493,7 +1508,7 @@ class VFACELogic(ScriptedLoadableModuleLogic):
         import time
 
         startTime = time.time()
-        logging.info("Processing started")
+        logger.info("Processing started")
 
         # Compute the thresholded output volume using the "Threshold Scalar Volume" CLI module
         cliParams = {
@@ -1507,7 +1522,7 @@ class VFACELogic(ScriptedLoadableModuleLogic):
         slicer.mrmlScene.RemoveNode(cliNode)
 
         stopTime = time.time()
-        logging.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
+        logger.info(f"Processing completed in {stopTime-startTime:.2f} seconds")
 
 
 #

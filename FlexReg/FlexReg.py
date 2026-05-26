@@ -51,7 +51,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -812,7 +812,7 @@ class FlexRegLogic(ScriptedLoadableModuleLogic):
         
         parameters["lower_arch"] = self.lower_arch
 
-        logger.info("Running FlexReg_CLI with parameters:", parameters)
+        logger.info(f"Running FlexReg_CLI with parameters: {parameters}")
 
         flybyProcess = slicer.modules.flexreg_cli
         self.cliNode = slicer.cli.run(flybyProcess,None, parameters)  
@@ -953,7 +953,7 @@ class FlexRegLogic(ScriptedLoadableModuleLogic):
 
             user = self.conda.getUser()
             command_to_execute = ["wsl", "--user", user,"--","bash","-c", command_execute]
-            logger.info("command_to_execute in condaRunCommand : ",command_to_execute)
+            logger.info(f"command_to_execute in condaRunCommand : {command_to_execute}")
 
             self.subpro = subprocess.Popen(command_to_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
                                     text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(),
@@ -965,7 +965,7 @@ class FlexRegLogic(ScriptedLoadableModuleLogic):
             for com in command :
                 command_execute = command_execute+ " "+com
 
-            logger.info("command_to_execute in conda run : ",command_execute)
+            logger.info(f"command_to_execute in conda run : {command_execute}")
             self.subpro = subprocess.Popen(command_execute, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8', errors='replace', env=slicer.util.startupEnvironment(), executable="/bin/bash", preexec_fn=os.setsid)
     
         self.stdout, self.stderr = self.subpro.communicate()
@@ -1854,7 +1854,7 @@ class WidgetParameter:
             slicer.util.downloadFile(url, modelFilePath)
 
         # Now you can use the downloaded model file path as needed
-        logger.info("Model file downloaded to:", modelFilePath)
+        logger.info(f"Model file downloaded to: {modelFilePath}")
         return modelFilePath
     
     def checkSegmentation(self)->bool:

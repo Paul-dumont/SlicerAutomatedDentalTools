@@ -35,7 +35,7 @@ if logger.handlers:
     logger.handlers.clear()
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
@@ -381,10 +381,10 @@ class AQ3DCWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
             # compute all measure
             patient_compute = self.logic.computeMeasurement(self.list_measure, dict_patient)
-            logger.debug("self.list_measure : ",self.list_measure)
+            logger.debug(f"self.list_measure : {self.list_measure}")
             # patient_compute = self.allowSign(patient_compute,self.list_measure)
 
-            logger.debug("self.ui.ComboBoxExcelFormat.currentText : ",self.ui.ComboBoxExcelFormat.currentText)
+            logger.debug(f"self.ui.ComboBoxExcelFormat.currentText : {self.ui.ComboBoxExcelFormat.currentText}")
             if self.ui.ComboBoxExcelFormat.currentText == "Statistics":
                 patient_compute = self.reorganizeStat(patient_compute)
             else :
@@ -2154,11 +2154,11 @@ class AQ3DCLogic(ScriptedLoadableModuleLogic):
                     measure.setPosition(point)
 
                 except KeyError as key:
-                    logger.warning(f"this landmark {key} doesnt exist for this patient", patient)
+                    logger.warning(f"this landmark {key} doesnt exist for this patient {patient}")
                     continue
 
                 try:
-                    logger.warning("measure : ",measure)
+                    logger.warning(f"measure : {measure}")
                     measure.computation()
                 except ZeroDivisionError as Zero:
                     logger.warning(
