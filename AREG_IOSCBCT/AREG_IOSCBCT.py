@@ -222,14 +222,18 @@ def load_data(scan_path,json_path_CBCT_U,json_path_CBCT_L,json_path_IOS_U,json_p
 
     image = sitk.ReadImage(scan_path)
     image_array = sitk.GetArrayFromImage(image)
-    origin = image.GetOrigin()
-    spacing = image.GetSpacing()
-    direction = image.GetDirection()
+    origin = np.array(image.GetOrigin())
+    spacing = np.array(image.GetSpacing())
+    direction = np.array(image.GetDirection()).reshape(3, 3)
+
+    ijk_to_lps = np.eye(4)
+    ijk_to_lps[:3, :3] = direction @ np.diag(spacing)
+    ijk_to_lps[:3, 3] = origin
 
     vol = pv.wrap(image_array.transpose(2, 1, 0))
+    cbct_raw_mesh = vol.contour(isosurfaces=[400])
 
-    cbct_surface = vol.contour(isosurfaces=[1000])
-    cbct_surface = cbct_surface.scale(spacing).translate(origin)
+    cbct_surface = cbct_raw_mesh.transform(ijk_to_lps, inplace=False)
 
     return lm_cbct_U,lm_cbct_L,lm_ios_U,lm_ios_L,cbct_surface
 
@@ -413,12 +417,12 @@ def main(args):
             # 3. RUN ICP REGISTRATION
             logger.debug(f"Running ICP for upper jaw")
             registered_ios_upper, mat_icp_upper = run_icp_point_to_plane(
-                aligned_ios_upper, cbct_surface, max_dist=1.5
+                aligned_ios_upper, cbct_surface, max_dist=1.0
             )
             
             logger.debug(f"Running ICP for lower jaw")
             registered_ios_lower, mat_icp_lower = run_icp_point_to_plane(
-                aligned_ios_lower, cbct_surface, max_dist=1.5
+                aligned_ios_lower, cbct_surface, max_dist=1.0
             )
             logger.info(f"ICP registration completed for patient {patient_id}")
             
