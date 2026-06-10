@@ -234,9 +234,9 @@ class Semi_CBCT(Method):
         for i, model in enumerate(listeModels):
             if i < len(listeModels) - 1:
                 if mask:
-                    translate += dicTranslate["Masks"][model] + " "
+                    translate += dicTranslate["Masks"][model] + ","
                 else:
-                    translate += dicTranslate["Models"][model] + " "
+                    translate += dicTranslate["Models"][model] + ","
             else:
                 if mask:
                     translate += dicTranslate["Masks"][model]
@@ -293,7 +293,7 @@ class Semi_CBCT(Method):
         # AREG CBCT PROCESS
         AREGProcess = slicer.modules.areg_cbct
         AReg_temp_folder = slicer.util.tempDirectory()
-        for i, reg in enumerate(reg_struct.split(" ")):
+        for i, reg in enumerate(reg_struct.split(",")):
             parameter_areg_cbct = {
                 "t1_folder": kwargs["input_t1_folder"],
                 "t2_folder": centered_T2,
@@ -478,7 +478,7 @@ class Auto_CBCT(Semi_CBCT):
 
         AREGProcess = slicer.modules.areg_cbct
         AReg_temp_folder = slicer.util.tempDirectory()
-        for i, reg in enumerate(reg_struct.split(" ")):
+        for i, reg in enumerate(reg_struct.split(",")):
             parameter_areg_cbct = {
                 "t1_folder": kwargs["input_t1_folder"],
                 "t2_folder": centered_T2,
@@ -810,7 +810,7 @@ class Or_Auto_CBCT(Semi_CBCT):
 
         AREGProcess = slicer.modules.areg_cbct
         AReg_temp_folder = slicer.util.tempDirectory()
-        for i, reg in enumerate(reg_struct.split(" ")):
+        for i, reg in enumerate(reg_struct.split(",")):
             parameter_areg_cbct = {
                 "t1_folder": ASO_T1_Oriented,
                 "t2_folder": centered_T2,
