@@ -839,7 +839,7 @@ class FlexRegLogic(ScriptedLoadableModuleLogic):
         self.process.start()
         
     def install_shapeaxi(self):
-        self.run_conda_command(target=self.conda.condaCreateEnv, command=(self.name_env,"3.12",["shapeaxi==1.1.1"],)) #run in parallel to not block slicer
+        self.run_conda_command(target=self.conda.condaCreateEnv, command=(self.name_env,"3.12",["shapeaxi==1.0.10","ocnn==2.2.1"],)) #run in parallel to not block slicer
         
     def check_if_pytorch3d(self):
         conda_exe = self.conda.getCondaExecutable()
@@ -1682,11 +1682,11 @@ class WidgetParameter:
             is_installed = False
             if check_env:
                 if platform.system() == "Windows":
-                    list_libs_windows = [('numpy',"<2.0.0",None),('itk',None,None),('torch','2.6.0',None),('monai','==0.7.0',None)] #(lib_name, version, url)
+                    list_libs_windows = [('numpy',"<2.0.0",None),('itk',None,None),('torch','==2.2.2',None),('monai','==1.3.2',None)] #(lib_name, version, url)
                     is_installed = install_function(self,list_libs_windows)
                     
                 else:
-                    list_libs_linux = [('numpy',"<2.0.0",None),('itk',None,None),('torch','2.6.0',None),('monai','==0.7.0',None)] #(lib_name, version, url)
+                    list_libs_linux = [('numpy',"<2.0.0",None),('itk',None,None),('torch','==2.2.2',None),('monai','==1.3.2',None)] #(lib_name, version, url)
                     is_installed = install_function(self,list_libs_linux)
                     
             if not is_installed:

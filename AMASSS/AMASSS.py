@@ -151,7 +151,7 @@ def install_function(self,list_libs:list,system:str):
 
                     if not already_installed:
                       already_installed = True
-                      pip_install(f'torch>=2.6.0 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/{cuda_version}')
+                      pip_install(f'torch>=2.2.2 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/{cuda_version}')
                       nb_installed += 3
 
                   else:
@@ -163,7 +163,7 @@ def install_function(self,list_libs:list,system:str):
                 return True
 
               else:
-                pip_install(f'torch>=2.6.0 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118')
+                pip_install(f'torch>=2.2.2 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118')
                 for lib, version in libs_to_install:
                   lib_version = f'{lib}=={version}' if version else lib
                   pip_install(lib_version)

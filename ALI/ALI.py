@@ -842,7 +842,7 @@ class ALIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onPredictButton(self):
     if self.type == "CBCT":
       list_libs_CBCT = [('itk', None), ('dicom2nifti', '2.3.0'), ('pydicom', '2.2.2')]
-      monai_version = '1.5.0' if sys.version_info >= (3, 10) else '0.7.0'
+      monai_version = '1.3.2' if sys.version_info >= (3, 10) else '0.7.0'
       list_libs_CBCT.append(('monai', monai_version))
       
       is_installed = install_function(self,list_libs_CBCT)
@@ -854,7 +854,7 @@ class ALIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       
       if check_env:
         list_libs_IOS = [('itk', None), ('dicom2nifti', '2.3.0'), ('pydicom', '2.2.2')]
-        monai_version = '1.5.0' if sys.version_info >= (3, 10) else '0.7.0'
+        monai_version = '1.3.2' if sys.version_info >= (3, 10) else '0.7.0'
         list_libs_IOS.append(('monai', monai_version))
 
         is_installed = install_function(self,list_libs_IOS)
@@ -2052,7 +2052,7 @@ class ALILogic(ScriptedLoadableModuleLogic):
     self.process.start()
     
   def install_shapeaxi(self):
-    self.run_conda_command(target=self.conda.condaCreateEnv, command=(self.name_env,self.pythonVersion,["shapeaxi==1.0.10"],)) #run in parallel to not block slicer
+    self.run_conda_command(target=self.conda.condaCreateEnv, command=(self.name_env,self.pythonVersion,["shapeaxi==1.0.10","ocnn==2.2.1"],)) #run in parallel to not block slicer
     
   def check_if_pytorch3d(self):
     conda_exe = self.conda.getCondaExecutable()
