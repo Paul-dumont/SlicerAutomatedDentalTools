@@ -842,7 +842,7 @@ class ALIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onPredictButton(self):
     if self.type == "CBCT":
       list_libs_CBCT = [('itk', None), ('dicom2nifti', '2.3.0'), ('pydicom', '2.2.2')]
-      monai_version = '1.5.0' if sys.version_info >= (3, 10) else '0.7.0'
+      monai_version = '1.3.2' if sys.version_info >= (3, 10) else '0.7.0'
       list_libs_CBCT.append(('monai', monai_version))
       
       is_installed = install_function(self,list_libs_CBCT)
@@ -854,7 +854,7 @@ class ALIWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       
       if check_env:
         list_libs_IOS = [('itk', None), ('dicom2nifti', '2.3.0'), ('pydicom', '2.2.2')]
-        monai_version = '1.5.0' if sys.version_info >= (3, 10) else '0.7.0'
+        monai_version = '1.3.2' if sys.version_info >= (3, 10) else '0.7.0'
         list_libs_IOS.append(('monai', monai_version))
 
         is_installed = install_function(self,list_libs_IOS)

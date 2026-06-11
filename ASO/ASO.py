@@ -73,8 +73,8 @@ def install_function(self):
         
         # ===== BUILD LIBRARY LIST =====
         try:
-            libs = [('itk', None), ('torch','2.6.0'),('pytorch_lightning',None),('dicom2nifti', '2.3.0'),('pydicom', '2.2.2')]
-            monai_version = '1.5.0' if sys.version_info >= (3, 10) else '0.7.0'
+            libs = [('itk', None), ('torch','2.2.2'),('pytorch_lightning',None),('dicom2nifti', '2.3.0'),('pydicom', '2.2.2')]
+            monai_version = '1.3.2' if sys.version_info >= (3, 10) else '0.7.0'
             libs.append(('monai', monai_version))
             logger.debug(f"Library list created with {len(libs)} libraries")
         except Exception as e:
