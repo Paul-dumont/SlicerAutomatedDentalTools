@@ -12,46 +12,7 @@
   </property>
   <property name="styleSheet">
    <string notr="true">qMRMLWidget {
-  background-color: #f8f9fa;
-}
-ctkCollapsibleButton {
-  background-color: #ffffff;
-  border: 1px solid #e0e6ed;
-  border-radius: 6px;
-  margin-bottom: 8px;
-  font-weight: 600;
-  padding: 6px 10px;
-}
-ctkCollapsibleButton:hover {
-  border: 1px solid #3498db;
-  background-color: #fbfcfd;
-}
-QLineEdit, QTextEdit {
-  background-color: #ffffff;
-  border: 1px solid #e0e6ed;
-  border-radius: 4px;
-  padding: 6px;
-  selection-background-color: #3498db;
-}
-QLineEdit:focus, QTextEdit:focus {
-  border: 2px solid #3498db;
-}
-QComboBox {
-  background-color: #ffffff;
-  border: 1px solid #e0e6ed;
-  border-radius: 4px;
-  padding: 4px 6px;
-}
-QComboBox:focus {
-  border: 2px solid #3498db;
-}
-QComboBox::drop-down {
-  width: 20px;
-  border: none;
-}
-QLabel {
-  color: #2c3e50;
-  font-weight: 500;
+ background-color: #f8f9fa;
 }
 QPushButton {
   background-color: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #4ba3ff, stop:1 #3498db);
