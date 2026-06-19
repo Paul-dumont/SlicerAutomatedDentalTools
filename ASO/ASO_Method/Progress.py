@@ -92,7 +92,8 @@ class DisplayASOIOS(Display):
 
     def __call__(self, **kwds) -> Tuple[float, str]:
         self.progress += 1
-        self.progress_bar = self.progress / self.nb_progress_total * 100
+        if self.nb_progress_total!=0:
+            self.progress_bar = self.progress / self.nb_progress_total * 100
         st = "Scan"
         if "/" in self.mode:
             st = "Patient"
