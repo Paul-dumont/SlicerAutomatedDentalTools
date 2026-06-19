@@ -103,7 +103,7 @@ def install_function():
                 try:
                     if lib == "torch":
                         logger.info("Installing torch from official PyTorch wheel (cu118)")
-                        pip_install("torch==2.6.0 --index-url https://download.pytorch.org/whl/cu118")
+                        pip_install("torch==2.2.0 --index-url https://download.pytorch.org/whl/cu118")
                     else:
                         pip_target = f"{lib}{version_spec}" if version_spec else lib
                         pip_install(pip_target)
@@ -116,7 +116,7 @@ def install_function():
     # Version-aware nnUNet installation
     install_logic = InstallLogic()
     if sys.version_info >= (3, 10):
-        nnunet_version = "nnunetv2>=2.6.2"
+        nnunet_version = "nnunetv2>=2.8.0"
     else:
         nnunet_version = "nnunetv2==2.5.2"
 

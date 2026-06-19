@@ -182,7 +182,7 @@ class CLICWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         rc = self.conda.condaRunCommand([
             "python", "-m", "pip", "install", "--no-cache-dir",
             "--index-url=https://download.pytorch.org/whl/cu118",
-            "torch==2.2.2", "torchvision==0.17.0", "torchaudio==2.2.2"
+            "torch==2.2.0", "torchvision==0.17.0", "torchaudio==2.2.0"
         ], self.name_env)
         self.sig.log.emit(f"[DEBUG] torch pip rc={rc!r}")
         logger.debug(f"[DEBUG] torch install returned → {rc!r}")

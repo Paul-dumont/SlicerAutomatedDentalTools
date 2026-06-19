@@ -151,7 +151,7 @@ def install_function(self,list_libs:list,system:str):
 
                     if not already_installed:
                       already_installed = True
-                      pip_install(f'torch>=2.2.2 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/{cuda_version}')
+                      pip_install(f'torch>=2.2.0 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/{cuda_version}')
                       nb_installed += 3
 
                   else:
@@ -163,7 +163,7 @@ def install_function(self,list_libs:list,system:str):
                 return True
 
               else:
-                pip_install(f'torch>=2.2.2 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118')
+                pip_install(f'torch>=2.2.0 torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118')
                 for lib, version in libs_to_install:
                   lib_version = f'{lib}=={version}' if version else lib
                   pip_install(lib_version)
@@ -831,9 +831,9 @@ class AMASSSWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
       # First, install the required libraries and their version
       try:
         list_libs = [
-          ('torch','2.2.2'),('torchvision', "0.17.0"),('torchaudio',"2.2.2"),
+          ('torch','2.2.0'),('torchvision', "0.17.0"),('torchaudio',"2.2.0"),
           ('itk', None),('blosc2', None),('dicom2nifti', '2.3.0'), 
-          ('pydicom', '2.2.2'),('einops',None),('nibabel',None),('nnunetv2',None)
+          ('pydicom', '2.2.2'),('einops',None),('nibabel',None),('nnunetv2','2.8.0')
         ]
         logger.info('Checking/installing required libraries...')
         libs_installation = install_function(self, list_libs, platform.system())

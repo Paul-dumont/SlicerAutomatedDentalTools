@@ -1201,7 +1201,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             # 1. Coordinate MONAI and PyTorch versions based on Python version
             if sys.version_info >= (3, 10):
                 monai_version = '==1.3.2'
-                torch_version = '==2.2.2'
+                torch_version = '==2.2.0'
                 
             if platform.system() == "Windows":
                 list_libs_CBCT_windows = [
@@ -1232,7 +1232,7 @@ class AREGWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
                     ('numpy', '<2.0.0', None),
                     ('torch', torch_version, None),
                     ('torchvision', "==0.17.0",None),('blosc2', None,None), 
-                    ('torchaudio',torch_version,None),('nnunetv2',None,None),
+                    ('torchaudio',torch_version,None),('nnunetv2','>=2.8.0',None),
                     ('monai', monai_version, None)
                 ]
                 is_installed = install_function(self, list_libs_CBCT)
