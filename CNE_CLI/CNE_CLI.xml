@@ -23,13 +23,6 @@
     </string>
 
     <string>
-      <name>modelType</name>
-      <label>modelType</label>
-      <index>1</index>
-      <description>Path to the output directory.</description>
-    </string>
-
-    <string>
       <name>notesType</name>
       <label>notesType</label>
       <index>2</index>

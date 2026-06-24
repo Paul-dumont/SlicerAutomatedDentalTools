@@ -1,5 +1,4 @@
 #!/usr/bin/env python-real
-
 import sys, argparse, os, traceback, glob, json
 from pathlib import Path
 
@@ -20,10 +19,11 @@ logger.addHandler(console_handler)
 
 logger.info("CNE_CLI.py run")
 
+INSTRUCTION_TMJ = "Using the following note, extract structured key-value pairs about the patient's symptoms and diagnoses:"
+
 def main(args):
     # Arguments extraction
     notesFolder_input = args.notesFolder_input
-    modelType = args.modelType
     notesType = args.notesType
     notesFolder_output = args.notesFolder_output
     modelPath = args.modelPath
@@ -67,7 +67,7 @@ def main(args):
     # STEP 3 : Loading the model in memory
     # ---------------------------------------------------------
     print("<filter-progress>0.20</filter-progress>", flush=True)
-    print(f"<filter-comment>Loading {modelType} model...</filter-comment>", flush=True)
+    print(f"<filter-comment>Loading model...</filter-comment>", flush=True)
     
     try:
         logger.info(f"Initializing Llama engine with {modelPath}...")
@@ -115,20 +115,18 @@ def main(args):
                 
                 logger.info(f"Generating extraction for {filename}...")
 
-                prompt = f"""<|start_header_id|>user<|end_header_id|>
+                messages = []
+                if notesType.upper() == "TMJ":
+                    messages.append({"role": "system", "content": INSTRUCTION_TMJ})
+                messages.append({"role": "user", "content": clinical_text})
 
-            {clinical_text}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-            """
-                output = llm(
-                    prompt,
-                    max_tokens=512,
-                    temperature=0.3,
-                    top_p=0.9,
-                    echo=False
+                output = llm.create_chat_completion(
+                    messages=messages,
+                    max_tokens=500,
+                    temperature=0.1,
                 )
 
-                ai_response = output['choices'][0]['text'].strip()
+                ai_response = output['choices'][0]['message']['content'].strip()
 
                 formatted_response = ""
                 try: 
@@ -190,7 +188,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument('notesFolder_input', type=str)
-    parser.add_argument('modelType', type=str)
     parser.add_argument("notesType", type=str)
     parser.add_argument('notesFolder_output', type=str)
     parser.add_argument('modelPath', type=str)

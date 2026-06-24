@@ -157,13 +157,11 @@ class CNEParameterNode:
     Parameters for Clinical Notes Extraction UI.
 
     notesFolder_input - Folder containing clinical notes (.docx/.pdf/.txt).
-    modelType - Model type selection: 'Mini' (Light/Fast) or 'Max' (Heavy/Precise).
     notesType - Notes type selection: 'TMJ' or 'Ortho'.
     notesFolder_output - Folder for summary output.
     """
 
     notesFolder_input: str = ""
-    modelType: str = "Mini"
     notesType: str = "TMJ"
     notesFolder_output: str = ""
 
@@ -198,12 +196,6 @@ class CNEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Create logic class.
         self.logic = CNELogic()
 
-        # Create QButtonGroup for model type selection
-        self.modelTypeButtonGroup = qt.QButtonGroup()
-        self.modelTypeButtonGroup.addButton(self.ui.modelQuickRadioButton)
-        self.modelTypeButtonGroup.addButton(self.ui.modelProRadioButton)
-        self.modelTypeButtonGroup.setExclusive(True)
-
         # Create QButtonGroup for notes type selection
         self.notesTypeButtonGroup = qt.QButtonGroup()
         self.notesTypeButtonGroup.addButton(self.ui.notesTypeTMJRadioButton)
@@ -224,28 +216,11 @@ class CNEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
         self.ui.downloadTestFilesButton.connect("clicked(bool)", self.onRunTestFilesButton)
 
-        self.ui.modelQuickRadioButton.connect("toggled(bool)", self._updateParameterNodeFromGUI)
-        self.ui.modelProRadioButton.connect("toggled(bool)", self._updateParameterNodeFromGUI)
         self.ui.notesTypeTMJRadioButton.connect("toggled(bool)", self._updateParameterNodeFromGUI)
         self.ui.notesTypeOrthoRadioButton.connect("toggled(bool)", self._updateParameterNodeFromGUI)
 
         self.initializeParameterNode()
-        self._syncModelTypeRadioWithParameterNode()
         self._syncNotesTypeRadioWithParameterNode()
-
-    def _syncModelTypeRadioWithParameterNode(self):
-        """Synchronize UI radio buttons with parameter node values."""
-        if not self._parameterNode:
-            return
-
-        self._updatingGUIFromParameterNode = True
-
-        if self._parameterNode.modelType == "Mini":
-            self.ui.modelQuickRadioButton.checked = True
-        elif self._parameterNode.modelType == "Max":
-            self.ui.modelProRadioButton.checked = True
-
-        self._updatingGUIFromParameterNode = False
 
     def _syncNotesTypeRadioWithParameterNode(self):
         """Synchronize UI radio buttons with parameter node values."""
@@ -312,7 +287,6 @@ class CNEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._parameterNodeGuiTag = self._parameterNode.connectGui(self.ui)
             self.addObserver(self._parameterNode, vtk.vtkCommand.ModifiedEvent, self._checkCanApply)
             self._checkCanApply()
-            self._syncModelTypeRadioWithParameterNode()
             self._syncNotesTypeRadioWithParameterNode()
 
     def _checkCanApply(self, caller=None, event=None) -> None:
@@ -350,17 +324,15 @@ class CNEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             self._updateParameterNodeFromGUI()
 
             notesFolder_input = self._parameterNode.notesFolder_input
-            modelType = self._parameterNode.modelType
             notesType = self._parameterNode.notesType
             notesFolder_output = self._parameterNode.notesFolder_output
 
             logger.info(f"Input folder   : {notesFolder_input}")
             logger.info(f"Output folder  : {notesFolder_output}")
-            logger.info(f"Selected model : {modelType}")
             logger.info(f"Notes type     : {notesType}")
 
             cliNode = self.logic.process(
-                notesFolder_input, modelType,
+                notesFolder_input,
                 notesType, notesFolder_output
             )
 
@@ -395,13 +367,6 @@ class CNEWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
         self._parameterNode.notesFolder_input = self.ui.notesFolderLineEdit_input.currentPath
         self._parameterNode.notesFolder_output = self.ui.notesFolderLineEdit_output.currentPath
-
-        if self.ui.modelQuickRadioButton.checked:
-            self._parameterNode.modelType = "Mini"
-        elif self.ui.modelProRadioButton.checked:
-            self._parameterNode.modelType = "Max"
-        else:
-            self._parameterNode.modelType = ""
 
         if self.ui.notesTypeTMJRadioButton.checked:
             self._parameterNode.notesType = "TMJ"
@@ -504,19 +469,11 @@ class CNELogic(ScriptedLoadableModuleLogic):
         
         return input_path, output_path
     
-    def getModelPath(self, modelType: str,notesType: str):
+    def getModelPath(self, notesType: str):
         """Returns the local path to the model, downloading it if necessary with a progress popup."""
 
         # 1. Configuration of the model based on UI selection
         if notesType == "Ortho":
-            if modelType == "Mini":
-
-                repo_id = "dcbia/Phi-3.5-Mini-Instruct-Ortho"
-                fileName = "model-q4_0.gguf" 
-                localModelName = "Phi-3.5-Mini-Ortho.gguf"
-                dialogText = "Downloading Mini Ortho AI model (approx. 2.4 GB)..."
-                
-            elif modelType == "Max":
                 repo_id = "dcbia/Meta-Llama-3.1-8B-Instruct-Ortho"
                 fileName = "model-q4_0.gguf" 
                 localModelName = "Meta-Llama-3.1-8B-Ortho.gguf"
@@ -524,20 +481,11 @@ class CNELogic(ScriptedLoadableModuleLogic):
 
         # 1. Configuration of the model based on UI selection
         elif notesType == "TMJ":
-            if modelType == "Mini":
-                repo_id = "dcbia/Qwen-2.5-1.5B-Instruct-TMJ"
-                fileName = "Qwen-2.5-1.5B-Instruct-TMJ-q4_0.gguf" 
-                localModelName = "Qwen-2.5-1.5B-TMJ.gguf"
-                dialogText = "Downloading Mini TMJ AI model (approx. 1 GB)..."
-                
-            elif modelType == "Max":
                 repo_id = "dcbia/Qwen-2.5-7B-Instruct-TMJ"
-                fileName = "Qwen-2.5-7B-Instruct-TMJ-q4_0.gguf" 
+                fileName = "qwen-ft-q4_k_m.gguf"
                 localModelName = "Qwen-2.5-7B-TMJ.gguf"
                 dialogText = "Downloading Max TMJ AI model (approx. 4.4 GB)..."
-        
-        else:
-            raise ValueError(f"Unknown model type selected: {modelType}")
+
 
         modelUrl = f"https://huggingface.co/{repo_id}/resolve/main/{fileName}"
         
@@ -557,11 +505,11 @@ class CNELogic(ScriptedLoadableModuleLogic):
 
         # 3. Check and download
         if not os.path.exists(destPath):
-            logger.info(f"Downloading {modelType} model to: {destPath}")
+            logger.info(f"Downloading  model to: {destPath}")
             
             # --- Create the popup (QProgressDialog) ---
             progressDialog = qt.QProgressDialog(dialogText, "Cancel", 0, 100)
-            progressDialog.setWindowTitle(f"CNE - Preparing {modelType} AI Model")
+            progressDialog.setWindowTitle(f"CNE - Preparing AI Model")
             progressDialog.setWindowModality(qt.Qt.WindowModal) 
             progressDialog.setMinimumDuration(0)
             progressDialog.show()
@@ -583,7 +531,7 @@ class CNELogic(ScriptedLoadableModuleLogic):
             try:
                 urllib.request.urlretrieve(modelUrl, destPath, reporthook=download_progress)
                 progressDialog.setValue(100)
-                slicer.util.showStatusMessage(f"{modelType} model download completed!", 3000)
+                slicer.util.showStatusMessage(f"AI model download completed!", 3000)
                 
             except Exception as e:
                 if os.path.exists(destPath):
@@ -597,16 +545,14 @@ class CNELogic(ScriptedLoadableModuleLogic):
             
         return destPath
 
-    def process(self, notesFolder_input: str, modelType: str,
+    def process(self, notesFolder_input: str,
                 notesType: str, notesFolder_output: str) -> bool:
         """Process clinical notes using the selected model and parameters."""
 
-        if not notesFolder_input or not modelType or not notesType or not notesFolder_output:
+        if not notesFolder_input or not notesFolder_output:
             missing = []
             if not notesFolder_input:
                 missing.append("Input folder")
-            if not modelType:
-                missing.append("Model type")
             if not notesType:
                 missing.append("Notes type")
             if not notesFolder_output:
@@ -618,7 +564,7 @@ class CNELogic(ScriptedLoadableModuleLogic):
             return None
 
         try:
-            modelPath = self.getModelPath(modelType, notesType)
+            modelPath = self.getModelPath(notesType)
         except Exception as e:
             slicer.util.errorDisplay(f"Failed to load model: {e}")
             return None
@@ -628,7 +574,6 @@ class CNELogic(ScriptedLoadableModuleLogic):
         CLI_module = slicer.modules.cne_cli
         parameters = {
             "notesFolder_input": notesFolder_input,
-            "modelType": modelType,
             "notesType": notesType,
             "notesFolder_output": notesFolder_output,
             "modelPath": modelPath,
