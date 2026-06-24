@@ -93,6 +93,12 @@ def check_dependencies() -> bool:
         if not check_lib_installed("llama_cpp"):
             missing_libs.append("llama-cpp-python")
 
+        if not check_lib_installed("fitz"):
+            missing_libs.append("pymupdf")
+
+        if not check_lib_installed("docx"):
+            missing_libs.append("python-docx")
+
         if not missing_libs:
             logger.info("All dependencies verified and available.")
             return True

@@ -21,6 +21,66 @@ logger.info("CNE_CLI.py run")
 
 INSTRUCTION_TMJ = "Using the following note, extract structured key-value pairs about the patient's symptoms and diagnoses:"
 
+SUPPORTED_EXTENSIONS = (".txt", ".pdf", ".docx")
+
+# Characters that vary between PDF/Word exports but never appeared in the
+# plain-text notes used for training. Normalizing them keeps the text the
+# model receives identical regardless of the source file format.
+_TEXT_REPLACEMENTS = {
+    "’": "'",   # right single quotation mark
+    "‘": "'",   # left single quotation mark
+    "“": '"',   # left double quotation mark
+    "”": '"',   # right double quotation mark
+    "–": "-",   # en dash
+    "—": "-",   # em dash
+    " ": " ",   # non-breaking space
+}
+
+
+def clean_text(text: str) -> str:
+    """Normalize text so notes look the same to the model no matter their source format."""
+    for old, new in _TEXT_REPLACEMENTS.items():
+        text = text.replace(old, new)
+    # Collapse excessive blank lines introduced by PDF/Word extraction
+    lines = [line.strip() for line in text.splitlines()]
+    cleaned_lines = []
+    for line in lines:
+        if line or (cleaned_lines and cleaned_lines[-1]):
+            cleaned_lines.append(line)
+    return "\n".join(cleaned_lines).strip()
+
+
+def extract_text_from_pdf(pdf_path: str) -> str:
+    """Extract plain text from a PDF file using PyMuPDF (fitz)."""
+    import fitz
+
+    doc = fitz.open(pdf_path)
+    try:
+        text = "\n".join(page.get_text() for page in doc)
+    finally:
+        doc.close()
+    return clean_text(text)
+
+
+def extract_text_from_docx(docx_path: str) -> str:
+    """Extract plain text from a Word document using python-docx."""
+    from docx import Document
+
+    doc = Document(docx_path)
+    return clean_text("\n".join(paragraph.text for paragraph in doc.paragraphs))
+
+
+def extract_text(file_path: str) -> str:
+    """Read a note regardless of its format (.txt/.pdf/.docx) and return normalized plain text."""
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext == ".pdf":
+        return extract_text_from_pdf(file_path)
+    if ext == ".docx":
+        return extract_text_from_docx(file_path)
+    with open(file_path, "r", encoding="utf-8") as f:
+        return clean_text(f.read())
+
+
 def main(args):
     # Arguments extraction
     notesFolder_input = args.notesFolder_input
@@ -39,13 +99,25 @@ def main(args):
     try:
         from llama_cpp import Llama
     except ImportError:
-        logger.error("ERROR: 'llama-cpp-python' library is not installed in Slicer.", file=sys.stderr)
+        logger.error("ERROR: 'llama-cpp-python' library is not installed in Slicer.")
         sys.exit(1)
-    
+
+    try:
+        import fitz  # noqa: F401  (PyMuPDF, required for .pdf notes)
+    except ImportError:
+        logger.error("ERROR: 'pymupdf' library is not installed in Slicer.")
+        sys.exit(1)
+
+    try:
+        import docx  # noqa: F401  (python-docx, required for .docx notes)
+    except ImportError:
+        logger.error("ERROR: 'python-docx' library is not installed in Slicer.")
+        sys.exit(1)
+
     # Validate that modelPath is provided and exists
     if not modelPath or not os.path.exists(modelPath):
         error_msg = f"ERROR: Model file not found or not provided: {modelPath}"
-        logger.error(error_msg, file=sys.stderr)
+        logger.error(error_msg)
         sys.exit(1)
     
     logger.info(f"Using model: {modelPath}")
@@ -56,10 +128,13 @@ def main(args):
     print("<filter-progress>0.10</filter-progress>", flush=True)
     print("<filter-comment>Scanning input folder...</filter-comment>", flush=True)
 
-    files_to_process = glob.glob(os.path.join(notesFolder_input, "*.txt"))
-    
+    files_to_process = []
+    for ext in SUPPORTED_EXTENSIONS:
+        files_to_process.extend(glob.glob(os.path.join(notesFolder_input, f"*{ext}")))
+
     if not files_to_process:
-        logger.warning(f"WARNING: No .txt files found in {notesFolder_input}", file=sys.stderr)
+        supported = ", ".join(SUPPORTED_EXTENSIONS)
+        logger.warning(f"WARNING: No supported files ({supported}) found in {notesFolder_input}")
         print("<filter-progress>1.00</filter-progress>", flush=True)
         sys.exit(0)
 
@@ -110,9 +185,8 @@ def main(args):
                 print(f"<filter-progress>{progress:.2f}</filter-progress>", flush=True)
                 print(f"<filter-comment>Processing {filename} ({i+1}/{total_files})...</filter-comment>", flush=True)
 
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    clinical_text = f.read()
-                
+                clinical_text = extract_text(file_path)
+
                 logger.info(f"Generating extraction for {filename}...")
 
                 messages = []
@@ -149,7 +223,7 @@ def main(args):
                     logger.warning(f"Warning: Could not format JSON for {filename}: {e}")
                     formatted_response = ai_response
 
-                output_filename = f"Extraction_{filename}"
+                output_filename = f"Extraction_{os.path.splitext(filename)[0]}.txt"
                 output_filepath = os.path.join(notesFolder_output, output_filename)
 
                 with open(output_filepath, 'w', encoding='utf-8') as f:
@@ -159,20 +233,20 @@ def main(args):
                 successfully_processed += 1
 
             except Exception as e:
-                logger.error(f"ERROR processing {filename}: {e}", file=sys.stderr)
+                logger.error(f"ERROR processing {filename}: {e}")
                 failed_files.append(filename)
                 traceback.print_exc(file=sys.stderr)
                 continue
         logger.info(f"Processing complete:")
         logger.info(f"Successfully processed: {successfully_processed}/{total_files}")
         if failed_files:
-            logger.info(f"Failed files: {', '.join(failed_files)}")     
+            logger.info(f"Failed files: {', '.join(failed_files)}")
 
     except ImportError:
-        logger.error("ERROR: 'llama-cpp-python' library is not installed in Slicer.", file=sys.stderr)
+        logger.error("ERROR: 'llama-cpp-python' library is not installed in Slicer.")
         sys.exit(1)
     except Exception as e:
-        logger.error("ERROR OCCURRED DURING INFERENCE:", file=sys.stderr)
+        logger.error("ERROR OCCURRED DURING INFERENCE:")
         traceback.print_exc(file=sys.stderr)
         sys.exit(1)
 

@@ -19,7 +19,7 @@
       <name>notesFolder_input</name>
       <label>notesFolder_input</label>
       <index>0</index>
-      <description>Path to the input directory.</description>
+      <description>Path to the input directory containing notes (.txt, .pdf, .docx).</description>
     </string>
 
     <string>
