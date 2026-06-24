@@ -19,14 +19,7 @@
       <name>notesFolder_input</name>
       <label>notesFolder_input</label>
       <index>0</index>
-      <description>Path to the input directory.</description>
-    </string>
-
-    <string>
-      <name>modelType</name>
-      <label>modelType</label>
-      <index>1</index>
-      <description>Path to the output directory.</description>
+      <description>Path to the input directory containing notes (.txt, .pdf, .docx).</description>
     </string>
 
     <string>
