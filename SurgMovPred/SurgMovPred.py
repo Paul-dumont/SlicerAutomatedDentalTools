@@ -171,6 +171,7 @@ def check_dependencies() -> bool:
         "sklearn": "scikit-learn",
         "lightgbm":"lightgbm"
     }
+    slicer.util.pip_install("numpy==2.4.0")
 
     max_retries = 1
     for attempt in range(max_retries + 1):
