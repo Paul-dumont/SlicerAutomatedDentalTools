@@ -1,9 +1,14 @@
 import os
 import shutil
+import zipfile
 from typing import Annotated
 import urllib.request
 import vtk
 import slicer
+import sys
+import os
+import urllib.request
+import ctypes
 import qt
 from slicer.i18n import tr as _
 from slicer.i18n import translate
@@ -80,25 +85,111 @@ def install_function(list_libs: list) -> None:
     else:
         del os.environ["CXX"]
 
+
+def ensure_mac_openmp():
+    """
+    Downloads libomp.dylib and places it directly in Slicer's CLI modules folder
+    so that all subprocesses (SurgMovPred_CLI) find it natively.
+    """
+    if sys.platform != "darwin":
+        return
+
+    # 1. Locate the CLI modules folder of the current Slicer application
+    # Based on Slicer's standard directory layout
+    slicer_bin_dir = os.path.dirname(sys.executable) # Contains /Applications/Slicer.app/Contents/bin
+    slicer_contents_dir = os.path.dirname(slicer_bin_dir) # /Applications/Slicer.app/Contents
+
+    # Look for the dynamic lib/Slicer-X.XX/cli-modules folder
+    lib_dir = os.path.join(slicer_contents_dir, "lib")
+    cli_modules_dir = None
+    
+    if os.path.exists(lib_dir):
+        for item in os.listdir(lib_dir):
+            if item.startswith("Slicer-"):
+                potential_cli_dir = os.path.join(lib_dir, item, "cli-modules")
+                if os.path.exists(potential_cli_dir):
+                    cli_modules_dir = potential_cli_dir
+                    break
+
+    # Fall back to the current module's folder if the specific one isn't found
+    if not cli_modules_dir:
+        cli_modules_dir = os.path.dirname(os.path.realpath(__file__))
+
+    target_libomp_path = os.path.join(cli_modules_dir, "libomp.dylib")
+
+    # 2. Download it if it isn't already there
+    if not os.path.exists(target_libomp_path):
+        slicer.util.showStatusMessage("Installing macOS compatibility layer for CLI...")
+        url = "https://mac.r-project.org/openmp/openmp-14.0.6-darwin20-Release.tar.gz"
+        
+        module_dir = os.path.dirname(os.path.realpath(__file__))
+        tar_path = os.path.join(module_dir, "openmp.tar.gz")
+        
+        try:
+            import urllib.request
+            import tarfile
+            import shutil
+            
+            urllib.request.urlretrieve(url, tar_path)
+            with tarfile.open(tar_path, "r:gz") as tar:
+                member = tar.getmember("usr/local/lib/libomp.dylib")
+                f = tar.extractfile(member)
+                if f:
+                    with open(target_libomp_path, "wb") as dest:
+                        dest.write(f.read())
+                        
+            if os.path.exists(tar_path):
+                os.remove(tar_path)
+            logger.info(f"libomp.dylib successfully deployed to CLI directory: {target_libomp_path}")
+        except Exception as e:
+            logger.error(f"Failed to deploy libomp.dylib to CLI directory: {e}")
+            if os.path.exists(tar_path):
+                os.remove(tar_path)
+            return
+
+    # 3. Also load the dylib in the parent process (Slicer UI)
+    try:
+        ctypes.CDLL(target_libomp_path, mode=ctypes.RTLD_GLOBAL)
+    except Exception as e:
+        logger.error(f"Failed to load libomp.dylib in main process: {e}")
+
 def check_dependencies() -> bool:
     """
     Checks dependencies when the Apply button is clicked.
     Returns True if everything is ready, False if it should be cancelled.
     Attempts up to 2 verifications with proper logging.
     """
+
+    if sys.platform == "darwin":
+        ensure_mac_openmp()
+
+    # Maps the import name (key) to the pip package name (value)
+    DEPENDENCIES = {
+        "pandas": "pandas",
+        "joblib": "joblib",
+        "openpyxl": "openpyxl",
+        "sklearn": "scikit-learn",
+        "lightgbm":"lightgbm"
+    }
+
     max_retries = 1
     for attempt in range(max_retries + 1):
-        missing_libs = []
+        missing_import_names = []
 
-        if not check_lib_installed("llama_cpp"):
-            missing_libs.append("llama-cpp-python")
+        # 1. Check via the import name (e.g. "sklearn")
+        for import_name in DEPENDENCIES.keys():
+            if not check_lib_installed(import_name):
+                missing_import_names.append(import_name)
 
-        if not missing_libs:
+        if not missing_import_names:
             logger.info("All dependencies verified and available.")
             return True
 
         if attempt < max_retries:
-            libs_str = "\n".join([f"- {lib}" for lib in missing_libs])
+            # 2. Get the actual pip package names (e.g. "scikit-learn")
+            libs_to_install = [DEPENDENCIES[imp] for imp in missing_import_names]
+            
+            libs_str = "\n".join([f"- {lib}" for lib in libs_to_install])
 
             msg = (
                 "The SurgMovPred module requires the following libraries to function:\n\n"
@@ -108,15 +199,18 @@ def check_dependencies() -> bool:
             )
 
             if slicer.util.confirmOkCancelDisplay(msg):
-                logger.info(f"Installing missing dependencies: {missing_libs}")
-                install_function(missing_libs)
+                logger.info(f"Installing missing dependencies: {libs_to_install}")
+                install_function(libs_to_install)
                 slicer.app.processEvents()
             else:
                 logger.warning("Installation cancelled by user.")
                 slicer.util.warningDisplay("Installation cancelled. Extraction has been stopped.")
                 return False
         else:
-            logger.error(f"Failed to install required dependencies: {missing_libs}")
+            libs_to_install = [DEPENDENCIES[imp] for imp in missing_import_names]
+            libs_str = "\n".join([f"- {lib}" for lib in libs_to_install])
+            
+            logger.error(f"Failed to install required dependencies: {libs_to_install}")
             error_msg = (
                 "Failed to install required dependencies:\n\n"
                 f"{libs_str}\n\n"
@@ -211,13 +305,21 @@ class SurgMovPredWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.cancelButton.connect("clicked(bool)", self.onCancelCliButton)
         self.ui.applyButton.connect("clicked(bool)", self.onApplyButton)
         self.ui.downloadTestFilesButton.connect("clicked(bool)", self.onRunTestFilesButton)
-        self.ui.DefaultModelButton.connect("clicked(bool)", self.onRunTestFilesButton)
+        self.ui.DefaultModelButton.connect("clicked(bool)", self.onDownloadDefaultModel)
 
         self.ui.inputFolderLineEdit.currentPathChanged.connect(self._checkCanApply)
         self.ui.modelFolderLineEdit.currentPathChanged.connect(self._checkCanApply)
         self.ui.outputFolderLineEdit.currentPathChanged.connect(self._checkCanApply)
 
         self.ui.cancelButton.setVisible(False)
+
+        documentsLocation = qt.QStandardPaths.DocumentsLocation
+        self.documents = qt.QStandardPaths.writableLocation(documentsLocation)
+
+        self.SlicerDownloadPath = os.path.join(
+            self.documents,
+            slicer.app.applicationName + "Downloads",
+        )
 
         self.initializeParameterNode()
 
@@ -300,16 +402,8 @@ class SurgMovPredWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     def onRunTestFilesButton(self) -> None:
         """Run test files when user clicks 'Run Test Files' button."""
         with slicer.util.tryWithErrorDisplay(_("Failed to download test files."), waitCursor=True):
-            # Get the selected notes type from parameter node
-            notesType = self._parameterNode.notesType
             
-            # Copy test files and get the paths
-            input_path, output_path = self.logic.copyTestFiles(notesType)
-            
-            # Update the folder paths in the UI
-            self.ui.notesFolderLineEdit_input.currentPath = input_path
-            self.ui.notesFolderLineEdit_output.currentPath = output_path
-
+            self.DownloadTestFiles()
 
     def onApplyButton(self) -> None:
         """Run processing when user clicks Apply button."""
@@ -331,6 +425,7 @@ class SurgMovPredWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
             cliNode = self.logic.process(inputFolder,modelPath,outputFolder)
 
             if cliNode:
+                self.ui.applyButton.setVisible(False)
                 self.ui.cancelButton.setVisible(True)
                 self.addObserver(cliNode, slicer.vtkMRMLCommandLineModuleNode.StatusModifiedEvent, self.onCliFinished)
 
@@ -339,14 +434,15 @@ class SurgMovPredWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         """Cancel the running CLI process."""
         if self.logic and hasattr(self.logic, 'cliNode') and self.logic.cliNode:
             self.logic.cliNode.Cancel()
-            self.cliProgressBar.visible = False
-            self.cliCancelButton.visible = False
+            self.ui.applyButton.setVisible(True)
+            self.ui.cancelButton.setVisible(False)
             slicer.util.warningDisplay("Processing cancelled by user.")
 
     def onCliFinished(self, caller, event) -> None:
-        """Hide progress bar and cancel button when CLI finishes."""
+        """Restore the apply button and hide the cancel button when CLI finishes."""
         status = caller.GetStatus()
         if status & (slicer.vtkMRMLCommandLineModuleNode.Completed | slicer.vtkMRMLCommandLineModuleNode.Cancelled):
+            self.ui.applyButton.setVisible(True)
             self.ui.cancelButton.setVisible(False)
 
     def _isDarkMode(self) -> bool:
@@ -608,8 +704,91 @@ class SurgMovPredWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         # Apply cancel style to cancel button
         if hasattr(self.ui, 'cancelButton'):
             self.ui.cancelButton.setStyleSheet(cancelButtonStyle)
+    
+    def DownloadUnzip(self, url, directory, folder_name=None, num_downl=1, total_downloads=1):
 
+        out_path = os.path.join(directory, folder_name)
+        if not os.path.exists(out_path):
+            logger.info("Downloading {}...".format(folder_name.split(os.sep)[-1]))
+            os.makedirs(out_path)
 
+            temp_path = os.path.join(directory, "temp.zip")
+
+            # Download the zip file from the url
+            with urllib.request.urlopen(url) as response, open(
+                temp_path, "wb"
+            ) as out_file:
+                # Pop up a progress bar with a QProgressDialog
+                progress = qt.QProgressDialog(
+                    "Downloading {} (File {}/{})".format(
+                        folder_name.split(os.sep)[0], num_downl, total_downloads
+                    ),
+                    "Cancel",
+                    0,
+                    100,
+                    self.parent,
+                )
+                progress.setCancelButton(None)
+                progress.setWindowModality(qt.Qt.WindowModal)
+                progress.setWindowTitle(
+                    "Downloading {}...".format(folder_name.split(os.sep)[0])
+                )
+                # progress.setWindowFlags(qt.Qt.WindowStaysOnTopHint)
+                progress.show()
+                length = response.info().get("Content-Length")
+                if length:
+                    length = int(length)
+                    blocksize = max(4096, length // 100)
+                    read = 0
+                    while True:
+                        buffer = response.read(blocksize)
+                        if not buffer:
+                            break
+                        read += len(buffer)
+                        out_file.write(buffer)
+                        progress.setValue(read * 100.0 / length)
+                        qt.QApplication.processEvents()
+                shutil.copyfileobj(response, out_file)
+
+            # Unzip the file
+            with zipfile.ZipFile(temp_path, "r") as zip:
+                zip.extractall(out_path)
+
+            # Delete the zip file
+            os.remove(temp_path)
+
+            logger.info(f"{folder_name} has been successfully installed")
+    
+    def DownloadTestFiles(self):
+
+        if not os.path.exists(self.SlicerDownloadPath):
+                os.makedirs(self.SlicerDownloadPath)
+
+        self.DownloadUnzip(
+            url="https://github.com/DCBIA-OrthoLab/SlicerAutomatedDentalTools/releases/download/SurgMovPred/TestFiles.zip",
+            directory=self.SlicerDownloadPath,
+            folder_name="SurgMovPred",
+        )
+        if os.path.exists(os.path.join(self.SlicerDownloadPath,"V_FACE/DefaultList")):
+            self.ui.inputFolderLineEdit.setCurrentPath(os.path.join(self.SlicerDownloadPath,"SurgMovPred/TestFiles"))
+
+            if not os.path.exists(os.path.join(self.SlicerDownloadPath,"SurgMovPred/Output")):
+                os.makedirs(os.path.join(self.SlicerDownloadPath,"SurgMovPred/Output"))
+            self.ui.outputFolderLineEdit.setCurrentPath(os.path.join(self.SlicerDownloadPath,"SurgMovPred/Output"))
+
+        self.onDownloadDefaultModel()
+
+    def onDownloadDefaultModel(self):
+        if not os.path.exists(self.SlicerDownloadPath):
+                os.makedirs(self.SlicerDownloadPath)
+
+        self.DownloadUnzip(
+            url="https://github.com/DCBIA-OrthoLab/SlicerAutomatedDentalTools/releases/download/SurgMovPred/all_models.zip",
+            directory=self.SlicerDownloadPath,
+            folder_name="SurgMovPred/Models")
+
+        if os.path.exists(os.path.join(self.SlicerDownloadPath,"SurgMovPred/Models/all_models")):
+            self.ui.modelFolderLineEdit.setCurrentPath(os.path.join(self.SlicerDownloadPath,"SurgMovPred/Models/all_models"))
 
 
 #
@@ -631,168 +810,6 @@ class SurgMovPredLogic(ScriptedLoadableModuleLogic):
 
     def getParameterNode(self,):
         return SurgMovPredParameterNode(super().getParameterNode())
-    
-    def copyTestFiles(self, notesType: str) -> tuple:
-        """Copy test files for the selected notes type from Resources/testfiles to SlicerDownloads/CNE/testfiles/{notesType}.
-        
-        Args:
-            notesType: Either 'TMJ' or 'Ortho' to specify which test files to copy
-            
-        Returns:
-            tuple: (input_folder_path, output_folder_path)
-        """
-        # Get the path to the testfiles directory (relative to this module)
-        moduleDir = os.path.dirname(__file__)
-        sourceTestFilesPath = os.path.join(moduleDir, "Resources", "testfiles")
-        
-        if not os.path.exists(sourceTestFilesPath):
-            raise FileNotFoundError(f"Test files directory not found: {sourceTestFilesPath}")
-        
-        # Define destination path in SlicerDownloads/CNE/testfiles/{notesType}
-        documents = qt.QStandardPaths.writableLocation(qt.QStandardPaths.DocumentsLocation)
-        destBasePath = os.path.join(
-            documents,
-            slicer.app.applicationName + "Downloads",
-            "CNE",
-            "testfiles",
-            notesType
-        )
-        
-        # Create destination directory if it doesn't exist
-        if not os.path.exists(destBasePath):
-            os.makedirs(destBasePath)
-        
-        # Determine which folders to copy based on notesType
-        if notesType == "Ortho":
-            folders_to_copy = ["input_Ortho", "output_Ortho"]
-        elif notesType == "TMJ":
-            folders_to_copy = ["input_TMJ", "output_TMJ"]
-        else:
-            raise ValueError(f"Unknown notes type: {notesType}")
-        
-        # Copy only the relevant folders
-        for folder_name in folders_to_copy:
-            source_folder = os.path.join(sourceTestFilesPath, folder_name)
-            dest_folder = os.path.join(destBasePath, folder_name)
-            
-            if not os.path.exists(source_folder):
-                logger.warning(f"Source folder not found: {source_folder}")
-                continue
-            
-            # Remove destination if it already exists
-            if os.path.exists(dest_folder):
-                shutil.rmtree(dest_folder)
-            
-            # Copy the folder
-            shutil.copytree(source_folder, dest_folder)
-            logger.info(f"Test folder copied from {source_folder} to {dest_folder}")
-            logger.info(f"Test folder download: {dest_folder}")
-        
-        # Determine input and output paths
-        if notesType == "Ortho":
-            input_folder = "input_Ortho"
-            output_folder = "output_Ortho"
-        else:  # TMJ
-            input_folder = "input_TMJ"
-            output_folder = "output_TMJ"
-        
-        input_path = os.path.join(destBasePath, input_folder)
-        output_path = os.path.join(destBasePath, output_folder)
-        
-        return input_path, output_path
-    
-    def getModelPath(self, modelType: str,notesType: str):
-        """Returns the local path to the model, downloading it if necessary with a progress popup."""
-
-        # 1. Configuration of the model based on UI selection
-        if notesType == "Ortho":
-            if modelType == "Mini":
-
-                repo_id = "dcbia/Phi-3.5-Mini-Instruct-Ortho"
-                fileName = "model-q4_0.gguf" 
-                localModelName = "Phi-3.5-Mini-Ortho.gguf"
-                dialogText = "Downloading Mini Ortho AI model (approx. 2.4 GB)..."
-                
-            elif modelType == "Max":
-                repo_id = "dcbia/Meta-Llama-3.1-8B-Instruct-Ortho"
-                fileName = "model-q4_0.gguf" 
-                localModelName = "Meta-Llama-3.1-8B-Ortho.gguf"
-                dialogText = "Downloading Max Ortho AI model (approx. 4.7 GB)..."
-
-        # 1. Configuration of the model based on UI selection
-        elif notesType == "TMJ":
-            if modelType == "Mini":
-                repo_id = "dcbia/Qwen-2.5-1.5B-Instruct-TMJ"
-                fileName = "Qwen-2.5-1.5B-Instruct-TMJ-q4_0.gguf" 
-                localModelName = "Qwen-2.5-1.5B-TMJ.gguf"
-                dialogText = "Downloading Mini TMJ AI model (approx. 1 GB)..."
-                
-            elif modelType == "Max":
-                repo_id = "dcbia/Qwen-2.5-7B-Instruct-TMJ"
-                fileName = "Qwen-2.5-7B-Instruct-TMJ-q4_0.gguf" 
-                localModelName = "Qwen-2.5-7B-TMJ.gguf"
-                dialogText = "Downloading Max TMJ AI model (approx. 4.4 GB)..."
-        
-        else:
-            raise ValueError(f"Unknown model type selected: {modelType}")
-
-        modelUrl = f"https://huggingface.co/{repo_id}/resolve/main/{fileName}"
-        
-        # 2. Directory structure
-        documents = qt.QStandardPaths.writableLocation(qt.QStandardPaths.DocumentsLocation)
-        SlicerDownloadPath = os.path.join(
-            documents,
-            slicer.app.applicationName + "Downloads",
-            "CNE",
-            "model"
-        )
-        
-        if not os.path.exists(SlicerDownloadPath):
-            os.makedirs(SlicerDownloadPath)
-            
-        destPath = os.path.join(SlicerDownloadPath, localModelName)
-
-        # 3. Check and download
-        if not os.path.exists(destPath):
-            logger.info(f"Downloading {modelType} model to: {destPath}")
-            
-            # --- Create the popup (QProgressDialog) ---
-            progressDialog = qt.QProgressDialog(dialogText, "Cancel", 0, 100)
-            progressDialog.setWindowTitle(f"CNE - Preparing {modelType} AI Model")
-            progressDialog.setWindowModality(qt.Qt.WindowModal) 
-            progressDialog.setMinimumDuration(0)
-            progressDialog.show()
-
-            # --- Callback function to update the popup ---
-            def download_progress(count, block_size, total_size):
-                if progressDialog.wasCanceled:
-                    raise Exception("Download cancelled by user.")
-                
-                if total_size > 0:
-                    percent = min(int((count * block_size * 100) / total_size), 100)
-                    progressDialog.setValue(percent)
-                
-                # Forces Slicer to refresh the UI (prevents freezing)
-                slicer.app.processEvents()
-            
-            # --- Start the download ---
-            import urllib.request
-            try:
-                urllib.request.urlretrieve(modelUrl, destPath, reporthook=download_progress)
-                progressDialog.setValue(100)
-                slicer.util.showStatusMessage(f"{modelType} model download completed!", 3000)
-                
-            except Exception as e:
-                if os.path.exists(destPath):
-                    os.remove(destPath)
-                slicer.util.errorDisplay(f"Download failed or was cancelled: {e}")
-                progressDialog.close()
-                raise e 
-                
-            finally:
-                progressDialog.close()
-            
-        return destPath
 
     def process(self, notesFolder_input: str, modelPath: str, notesFolder_output: str) -> bool:
         """Process clinical notes using the selected model and parameters."""
