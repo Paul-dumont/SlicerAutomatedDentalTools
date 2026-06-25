@@ -54,12 +54,18 @@ def approximation(cbct_folder, mri_folder, output_folder):
     
     patient_count = 0
     total_patients = sum(1 for root, _, files in os.walk(cbct_folder)
-                         for f in files if "CBCT" in f and (f.endswith(".nii") or f.endswith(".nii.gz")))
+                         for f in files if f.endswith(".nii") or f.endswith(".nii.gz"))
 
     for root, _, files in os.walk(cbct_folder):
         for cbct_file in files:
-            if "CBCT" in cbct_file and (cbct_file.endswith(".nii") or cbct_file.endswith(".nii.gz")):
-                patient_id = cbct_file.split("CBCT")[0]
+            if cbct_file.endswith(".nii") or cbct_file.endswith(".nii.gz"):
+                # Prefer splitting on "CBCT" when present (e.g. "B010_CBCT_01.nii.gz"
+                # -> "B010"); fall back to the leading token for filenames that don't
+                # contain it (e.g. "B010.nii.gz" -> "B010"), instead of skipping them.
+                if "CBCT" in cbct_file:
+                    patient_id = cbct_file.split("CBCT")[0].rstrip("_")
+                else:
+                    patient_id = cbct_file.split(".")[0].split("_")[0]
                 cbct_path = os.path.join(root, cbct_file)
                 mri_path = get_corresponding_file(mri_folder, patient_id, "MRI")
 
@@ -163,8 +169,8 @@ def approximation(cbct_folder, mri_folder, output_folder):
                         sys.stdout.flush()
                         time.sleep(0.5)
 
-            else: 
-                logger.warning(f"CBCT file {cbct_file} does not match the expected format: {patient_id}_CBCT_xx.nii.gz")
+            else:
+                logger.warning(f"Skipping non-NIfTI file: {cbct_file}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Register CBCT images with corresponding MRI images.')

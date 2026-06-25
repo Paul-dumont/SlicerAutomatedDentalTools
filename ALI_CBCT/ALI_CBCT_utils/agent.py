@@ -4,7 +4,9 @@ import logging
 from collections import deque
 import sys
 
-from ALI_CBCT_utils.constants import bcolors
+import os
+
+from ALI_CBCT_utils.constants import bcolors, DEVICE
 
 # --- LOGGING CONFIGURATION ---
 logger = logging.getLogger("ALI_CBCT_Agent")
@@ -257,7 +259,12 @@ class Agent :
             
             found = False
             tot_step = 0
-            max_time = 15  # seconds
+            # Each search step does a CPU/GPU forward pass; CPU-only inference
+            # needs much longer than a GPU to converge, so give it a bigger
+            # default budget. Override with the ALI_SEARCH_MAX_TIME env var
+            # if either default still doesn't fit your hardware.
+            default_max_time = 15 if DEVICE.type == "cuda" else 60
+            max_time = float(os.environ.get("ALI_SEARCH_MAX_TIME", default_max_time))  # seconds
             
             while not found and time.time() - tic < max_time:
                 tot_step += 1

@@ -7,6 +7,7 @@ from MRI2CBCT_utils.Preprocess_MRI import Process_MRI
 from MRI2CBCT_utils.Preprocess_CBCT_MRI import Preprocess_CBCT_MRI
 from MRI2CBCT_utils.Reg_MRI2CBCT import Registration_MRI2CBCT
 from MRI2CBCT_utils.Approx_MRI2CBCT import Approximation_MRI2CBCT
+from MRI2CBCT_utils.ManualApprox_MRI2CBCT import ManualApproximation_MRI2CBCT
 from MRI2CBCT_utils.LR_crop import LR_CROP_MRI2CBCT
 from MRI2CBCT_utils.TMJ_crop import TMJ_CROP_MRI2CBCT
 
@@ -295,6 +296,7 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.preprocess_mri_cbct = Preprocess_CBCT_MRI(self)
         self.registration_mri2cbct = Registration_MRI2CBCT(self)
         self.approximate_mri2cbct = Approximation_MRI2CBCT(self)
+        self.manual_approx_mri2cbct = ManualApproximation_MRI2CBCT(self)
         self.lr_crop_mri2cbct = LR_CROP_MRI2CBCT(self)
         self.tmj_crop_mri2cbct = TMJ_CROP_MRI2CBCT(self)
 
@@ -318,7 +320,8 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.SearchButtonApproxMRI.connect("clicked(bool)",partial(self.openFinder,"InputMRIApprox"))
         self.ui.SearchButtonOutputApprox.connect("clicked(bool)",partial(self.openFinder,"OutputApprox"))
         self.ui.pushButtonApproximateMRI.connect("clicked(bool)", self.approximateMRI)
-        
+        self.manual_approx_mri2cbct.injectUI(self.ui.approxCollapsibleButton)
+
         
         
         ### L/R Cropping ###

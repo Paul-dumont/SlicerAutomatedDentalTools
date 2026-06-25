@@ -27,7 +27,7 @@ import csv
 
 def run_resample(img=None, dir=None, csv=None, csv_column='image', csv_root_path=None, csv_use_spc=0,
                      csv_column_spcx=None, csv_column_spcy=None, csv_column_spcz=None, ref=None, size=None,
-                     img_spacing=None, spacing=None, origin=None, linear=False, center=0, rightSide=0,mri=0, fit_spacing=False,
+                     img_spacing=None, spacing=None, origin=None, linear=True, center=0, rightSide=0,mri=0, fit_spacing=False,
                      iso_spacing=False, image_dimension=2, pixel_dimension=1, rgb=False, ow=1, out="./out.nrrd",
                      out_ext=None):
     args = {
@@ -106,7 +106,12 @@ def main(input_folder,output_folder,resample_size,spacing,center,iso_spacing,is_
                 run_resample(img=input_path,out=out_path,spacing=list(map(float, spacing.split(','))),size=[size_file[0],size_file[1],size_file[2]],fit_spacing=False,center=center_image,rightSide=isRight,mri=isMRI,iso_spacing=False,linear=linear,image_dimension=3,pixel_dimension=1,rgb=False,ow=0)
             elif resample_size != "None" and spacing!="None" :
                 run_resample(img=input_path,out=out_path,spacing=list(map(float, spacing.split(','))),size=list(map(int, resample_size.split(','))),fit_spacing=True,center=center_image,rightSide=isRight,mri=isMRI,iso_spacing=False,linear=linear,image_dimension=3,pixel_dimension=1,rgb=False,ow=0)
-                
+            else:
+                # Neither a target size nor a target spacing was requested -
+                # keep this file's own original size/spacing (e.g. just to
+                # apply centering/mirroring) instead of silently skipping it.
+                run_resample(img=input_path,out=out_path,spacing=list(spacing_file),size=[size_file[0],size_file[1],size_file[2]],fit_spacing=False,center=center_image,rightSide=isRight,mri=isMRI,iso_spacing=False,linear=linear,image_dimension=3,pixel_dimension=1,rgb=False,ow=0)
+
             if total_patients > 0:
                 patient_count += 1
                 progress = patient_count / total_patients
@@ -151,14 +156,19 @@ if __name__=="__main__":
     if os.path.isdir(args.input_folder_T2_MRI):
         main(args.input_folder_T2_MRI,mri_output_folder,args.resample_size,args.spacing,args.center,iso_spacing=True)
         
+    # CBCT (and its segmentations) must never be forced to the MRI's
+    # resample_size - that would crop the full-head CBCT volume down to the
+    # MRI's (much smaller) voxel dimensions, discarding most of the volume.
+    # They only get a spacing change here; their own original size is kept
+    # (see the "resample_size == 'None'" branches in main()).
     if os.path.isdir(args.input_folder_CBCT):
         cbct_output_folder = os.path.join(args.output_folder, "CBCT")
-        main(args.input_folder_CBCT,cbct_output_folder,args.resample_size,args.spacing,args.center,iso_spacing=False)
+        main(args.input_folder_CBCT,cbct_output_folder,"None",args.spacing,args.center,iso_spacing=False)
     if os.path.isdir(args.input_folder_T2_CBCT):
-        main(args.input_folder_T2_CBCT,cbct_output_folder,args.resample_size,args.spacing,args.center,iso_spacing=False)
-        
+        main(args.input_folder_T2_CBCT,cbct_output_folder,"None",args.spacing,args.center,iso_spacing=False)
+
     if os.path.isdir(args.input_folder_Seg):
         seg_output_folder = os.path.join(args.output_folder, "Seg")
-        main(args.input_folder_Seg,seg_output_folder,args.resample_size,args.spacing,args.center,iso_spacing=False, is_seg=True)
+        main(args.input_folder_Seg,seg_output_folder,"None",args.spacing,args.center,iso_spacing=False, is_seg=True)
     if os.path.isdir(args.input_folder_T2_Seg):
-        main(args.input_folder_T2_Seg,seg_output_folder,args.resample_size,args.spacing,args.center,iso_spacing=False, is_seg=True)
+        main(args.input_folder_T2_Seg,seg_output_folder,"None",args.spacing,args.center,iso_spacing=False, is_seg=True)

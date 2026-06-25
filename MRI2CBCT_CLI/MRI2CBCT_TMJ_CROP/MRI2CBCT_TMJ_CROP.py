@@ -107,24 +107,35 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     ### ------------------------------------------------------------------ ###
     
     
-    mid      = cbct.shape[0] // 2
-    cog      = np.array(np.nonzero(mri.get_fdata() > 0)).mean(axis=1)
-    cog_w    = mri.affine[:3, :3] @ cog + mri.affine[:3, 3]
-    cog_cbct = np.linalg.inv(cbct.affine)[:3, :3] @ cog_w + \
-               np.linalg.inv(cbct.affine)[:3, 3]
-    side = "Left" if cog_cbct[0] < mid else "Right"
+    mid = cbct.shape[0] // 2
+
+    # Decide Left/Right in world space, not in this CBCT's own voxel grid:
+    # nibabel always expresses .affine as mapping to RAS+ world mm, so +X is
+    # always anatomical Right and -X is always Left, regardless of how a
+    # given scan's voxel axes happen to be oriented/flipped. Comparing
+    # against the CBCT's own voxel index instead caused a systematic
+    # Left/Right swap on scans where axis 0 runs the opposite direction.
+    cog          = np.array(np.nonzero(mri.get_fdata() > 0)).mean(axis=1)
+    cog_w        = mri.affine[:3, :3] @ cog + mri.affine[:3, 3]
+    cbct_mid_ijk = np.array(cbct.shape) / 2.0
+    cbct_mid_w   = cbct.affine[:3, :3] @ cbct_mid_ijk + cbct.affine[:3, 3]
+    side = "Right" if cog_w[0] > cbct_mid_w[0] else "Left"
     logger.info(f"MRI side: {side}")
 
-    
+
     ### ------------------------------------------------------------------ ###
 
 
-    if side == "Left":
-        start_half = np.array([0, 0, 0])
-        end_half   = np.array([mid, *cbct.shape[1:]])
-    else:
+    # Which half of *this* CBCT's voxel grid (axis 0) corresponds to "Right"
+    # also depends on that scan's own affine direction along axis 0.
+    axis0_step_world = cbct.affine[:3, 0]
+    increasing_index_is_right = axis0_step_world[0] > 0
+    if (side == "Right") == increasing_index_is_right:
         start_half = np.array([mid, 0, 0])
         end_half   = np.array(cbct.shape)
+    else:
+        start_half = np.array([0, 0, 0])
+        end_half   = np.array([mid, *cbct.shape[1:]])
     cbct_half = crop_with_affine(cbct, start_half, end_half)
 
     case_dir = tmp_dir / name
@@ -232,8 +243,17 @@ def main(args):
         mri_path  = Path(files.get("mri", ""))
         seg_path  = Path(files.get("seg", ""))
 
-        if not cbct_path.exists() or not mri_path.exists() or not seg_path.exists():
+        # .exists() returns True for "" (the current directory) when a key is
+        # missing from `files`, so a missing CBCT/MRI/SEG entry would slip
+        # past this check and crash nib.load() later. is_file() correctly
+        # rejects that.
+        if not cbct_path.is_file() or not mri_path.is_file() or not seg_path.is_file():
             logger.info(f"Skipping {pid}: missing CBCT, MRI, or SEG")
+            continue
+
+        already_done = list(output_dir.glob(f"MRI/{pid}_MRI_TMJ_crop*.nii.gz"))
+        if already_done:
+            logger.info(f"Skipping {pid}: already processed (found {already_done[0].name})")
             continue
 
         logger.info(f"\nPatient: {pid}")
