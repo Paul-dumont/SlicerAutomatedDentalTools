@@ -50,7 +50,7 @@ def enhance_contrast(image,upper_percentile,lower_percentile, min_norm, max_norm
     # Normalize the image using the computed thresholds
     array = sitk.GetArrayFromImage(image)
     normalized_array = np.clip((array - lower_threshold) / (upper_threshold - lower_threshold), 0, 1)
-    scaled_array = normalized_array * max_norm - min_norm
+    scaled_array = normalized_array * (max_norm - min_norm) + min_norm
     
     return sitk.GetImageFromArray(scaled_array)
 

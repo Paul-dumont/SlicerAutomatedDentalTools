@@ -1,13 +1,12 @@
 #!/usr/bin/env python-real
 
 import os
-import argparse, subprocess, shutil, itertools
+import argparse, shutil, itertools
 from nnunetv2.inference.predict_from_raw_data import predict_entry_point
 from typing import Optional
 from pathlib import Path
 import numpy as np
 import nibabel as nib
-from  scipy.ndimage import label
 
 import sys
 import logging
@@ -28,46 +27,13 @@ fpath = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(fpath)
 
 from MRI2CBCT_CLI_utils import GetPatients
+from MRI2CBCT_CLI_utils.condyle_segmentation import segment_condyle, crop_with_affine
 
 # ── CONFIG ──────────────────────────────────────────────────────────
-DATASET      = "Dataset001_myseg"
-CONFIG       = "3d_fullres"
-PLAN         = "nnUNetResEncUNetXLPlans"
 MARGIN       = 3                          # voxels besides B-box
-PROBA_THR    = 0.02
 FIXED_BBOX_VOXELS = [400, 400, 400]       # set to None to disable fixed box; otherwise [sx,sy,sz] in voxels
 
-# ── Tools ──────────────────────────────────────────────────────────
-def crop_with_affine(img: nib.Nifti1Image, start: np.ndarray, end: np.ndarray) -> nib.Nifti1Image:
-    """Beneath-volume [start,end[ and keep world geometry."""
-    data   = img.get_fdata()
-    affine = img.affine.copy()
-    sub    = data[start[0]:end[0], start[1]:end[1], start[2]:end[2]]
-    affine[:3, 3] += affine[:3, :3] @ start          # move origin
-    return nib.Nifti1Image(sub, affine)
 
-def biggest_cc(mask: np.ndarray) -> np.ndarray:
-    lbl, n = label(mask)
-    if n <= 1: return mask
-    vols = [(lbl == i).sum() for i in range(1, n+1)]
-    return (lbl == 1+np.argmax(vols))
-
-def nnunet_predict(case_dir: Path, out_dir: Path, model_folder: Path) -> None:
-    os.environ['nnUNet_results'] = str(model_folder.parent.parent)
-
-    subprocess.check_call([
-        "nnUNetv2_predict",
-        "-i", str(case_dir),
-        "-o", str(out_dir),
-        "-d", DATASET,
-        "-c", CONFIG,
-        "-p", PLAN,
-        "--disable_tta",
-        "--save_probabilities",
-        "-f", "0"
-    ])
-
-    
 def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], tmp_dir: Path, out_dir: Path, model_folder: Path) -> None:
     def crop_by_world_corners(img: nib.Nifti1Image, corners_world: np.ndarray) -> tuple[Optional[nib.Nifti1Image], Optional[tuple[np.ndarray, np.ndarray]]]:
         """
@@ -103,51 +69,15 @@ def process_patient(cbct_path: Path, mri_path: Path, seg_path: Optional[Path], t
     cbct = nib.load(cbct_path)
     mri  = nib.load(mri_path)
 
-    
-    ### ------------------------------------------------------------------ ###
-    
-    
-    mid      = cbct.shape[0] // 2
-    cog      = np.array(np.nonzero(mri.get_fdata() > 0)).mean(axis=1)
-    cog_w    = mri.affine[:3, :3] @ cog + mri.affine[:3, 3]
-    cog_cbct = np.linalg.inv(cbct.affine)[:3, :3] @ cog_w + \
-               np.linalg.inv(cbct.affine)[:3, 3]
-    side = "Left" if cog_cbct[0] < mid else "Right"
-    logger.info(f"MRI side: {side}")
 
-    
     ### ------------------------------------------------------------------ ###
 
-
-    if side == "Left":
-        start_half = np.array([0, 0, 0])
-        end_half   = np.array([mid, *cbct.shape[1:]])
-    else:
-        start_half = np.array([mid, 0, 0])
-        end_half   = np.array(cbct.shape)
-    cbct_half = crop_with_affine(cbct, start_half, end_half)
 
     case_dir = tmp_dir / name
-    case_dir.mkdir(parents=True, exist_ok=True)
-    for f in case_dir.glob("*.nii.gz"):
-        f.unlink()
-    nib.save(cbct_half, case_dir / f"{name}_0000.nii.gz")
-
-
-    ### ------------------------------------------------------------------ ###
-    
-    
-    pred_dir = case_dir / "predictions"
-    pred_dir.mkdir(exist_ok=True)
-    nnunet_predict(case_dir, pred_dir, model_folder)
+    mask, cbct_half, side = segment_condyle(cbct_path, mri_path, case_dir, model_folder)
+    logger.info(f"MRI side: {side}")
     logger.info("Prediction done")
 
-    pred = nib.load(pred_dir / f"{name}.nii.gz").get_fdata()
-    if pred.ndim == 4:
-        pred = np.argmax(pred, 0)
-
-    mask = pred if pred.max() > 1 else (pred > PROBA_THR)
-    mask = biggest_cc(mask)
     # save mask for inspection (in cbct_half voxel space)
     try:
         mask_img = nib.Nifti1Image(mask.astype(np.uint8), cbct_half.affine)
@@ -232,8 +162,17 @@ def main(args):
         mri_path  = Path(files.get("mri", ""))
         seg_path  = Path(files.get("seg", ""))
 
-        if not cbct_path.exists() or not mri_path.exists() or not seg_path.exists():
+        # .exists() returns True for "" (the current directory) when a key is
+        # missing from `files`, so a missing CBCT/MRI/SEG entry would slip
+        # past this check and crash nib.load() later. is_file() correctly
+        # rejects that.
+        if not cbct_path.is_file() or not mri_path.is_file() or not seg_path.is_file():
             logger.info(f"Skipping {pid}: missing CBCT, MRI, or SEG")
+            continue
+
+        already_done = list(output_dir.glob(f"MRI/{pid}_MRI_TMJ_crop*.nii.gz"))
+        if already_done:
+            logger.info(f"Skipping {pid}: already processed (found {already_done[0].name})")
             continue
 
         logger.info(f"\nPatient: {pid}")

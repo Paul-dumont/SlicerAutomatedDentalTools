@@ -36,12 +36,22 @@ def extract_patient_id(filename: str) -> str:
         .split("_T1")[0]
         .split("_Cl")[0]
         .split("_seg")[0]
+        .split("_Seg")[0]
         .split("_mask")[0]
+        .split("_Mask")[0]
         .split("_pred")[0]
+        .split("_Pred")[0]
+        .split("_crop")[0]
+        .split("_Crop")[0]
+        .split("_Left")[0]
+        .split("_left")[0]
+        .split("_Right")[0]
+        .split("_right")[0]
+        .split("_approximate")[0]
+        .split("_Approximate")[0]
         .split("_CBCT")[0]
         .split("_MRI")[0]
         .split("_MR")[0]
-        .split("_Seg")[0]
         .split(".")[0]
     )
 
@@ -57,8 +67,17 @@ def GetPatients(cbct_folder, mri_folder, seg_folder):
         pid = extract_patient_id(file)
         patients.setdefault(pid, {})["mri"] = file
 
+    # Segmentation files must not create new patient entries on their own -
+    # mis-tagged or stray seg files (e.g. "B002_Pred_CB.nii.gz") would
+    # otherwise show up as spurious patients with no CBCT/MRI. Only attach a
+    # seg to a patient that already exists from the CBCT/MRI folders.
+    seg_files_by_id = {}
     for file in GetListFiles(seg_folder, extensions):
         pid = extract_patient_id(file)
-        patients.setdefault(pid, {})["seg"] = file
+        seg_files_by_id[pid] = file
+
+    for pid, files in patients.items():
+        if pid in seg_files_by_id:
+            files["seg"] = seg_files_by_id[pid]
 
     return patients

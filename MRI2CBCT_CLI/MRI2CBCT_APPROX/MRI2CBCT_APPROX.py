@@ -35,7 +35,7 @@ def create_folder(folder):
     if not os.path.exists(folder):
         os.makedirs(folder)
         
-def run_script_first_approximation(cbct_folder, mri_folder, output_folder):
+def run_script_first_approximation(cbct_folder, mri_folder, output_folder, model_folder, tmp_folder):
     """
     Approximates CBCT images to MRI images and saves the resulting images.
 
@@ -43,15 +43,17 @@ def run_script_first_approximation(cbct_folder, mri_folder, output_folder):
         cbct_folder (str): Path to the folder containing CBCT images
         mri_folder (str): Path to the folder containing MRI images
         output_folder (str): Path to the folder where output images will be saved
+        model_folder (str): Path to the nnUNet condyle segmentation model
+        tmp_folder (str): Scratch folder for nnUNet per-case files
 
     Returns:
         str: Path to the folder containing the approximated images.
     """
-    
+
     first_approximation_folder = os.path.join(output_folder, "first_approximation")
     create_folder(first_approximation_folder)
-    
-    approximation(cbct_folder, mri_folder, first_approximation_folder)
+
+    approximation(cbct_folder, mri_folder, first_approximation_folder, model_folder, tmp_folder)
     return first_approximation_folder
 
 def run_script_get_transformation(mean_folder, cbct_folder, output_folder):
@@ -109,10 +111,12 @@ def main():
     parser.add_argument('cbct_folder', type=str, help="Folder containing original CBCT images.")
     parser.add_argument('mri_folder', type=str, help="Folder containing original MRI images.")
     parser.add_argument('output_folder', type=str, help="Folder containing the outputs of the approximation.")
+    parser.add_argument('model_folder', type=str, help="Path to the nnUNet condyle segmentation model.")
+    parser.add_argument('tmp_folder', type=str, help="Scratch folder for nnUNet per-case files.")
     args = parser.parse_args()
-    
+
     # Approximate MRI to CBCT
-    run_script_first_approximation(args.cbct_folder, args.mri_folder, args.output_folder)
+    run_script_first_approximation(args.cbct_folder, args.mri_folder, args.output_folder, args.model_folder, args.tmp_folder)
 
 if __name__ == "__main__":
     logger.info("Debug: MRI2CBCT_APPROX module is being loaded")

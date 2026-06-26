@@ -8,6 +8,7 @@ set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}/approx_utils.py
   ${MODULE_NAME}/approximate.py
   ${MODULE_NAME}/AREG_MRI.py
+  ${MODULE_NAME}/condyle_segmentation.py
   ${MODULE_NAME}/crop_approximation.py
   ${MODULE_NAME}/LR_crop.py
   ${MODULE_NAME}/mri_inverse.py

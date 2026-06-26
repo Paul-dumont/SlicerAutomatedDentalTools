@@ -55,13 +55,19 @@ def MaskedImage(fixed_image_path, fixed_seg_path, folder_output, suffix, SegLabe
 def applyMask(image, mask, label):
     """
     Apply a mask to an image.
-    
+
     Arguments:
     image (SimpleITK.Image): The image to be masked.
     mask (SimpleITK.Image): The mask image.
     label (int): The label value to use for masking.
     """
-    try : 
+    try :
+        if mask.GetSize() != image.GetSize():
+            logger.warning(
+                f"Mask size {mask.GetSize()} does not match image size {image.GetSize()}; "
+                "resampling mask onto the image grid before masking.")
+            mask = sitk.Resample(mask, image, sitk.Transform(), sitk.sitkNearestNeighbor, 0, mask.GetPixelID())
+
         array = sitk.GetArrayFromImage(mask)
         if label is not None and label in np.unique(array):
             array = np.where(array == label, 1, 0)
@@ -106,20 +112,27 @@ def apply_mask_f(folder_path, seg_folder, folder_output, suffix, seg_label):
     
     for root, _, files in os.walk(folder_path):
         for file in files:
-            if file.endswith(('.nii', '.nii.gz')) and ('_CBCT' in file or '_MR' in file):
-                fixed_image_path = os.path.join(root, file)
-                fixed_seg_path = find_segmentation_file(file, seg_folder)
-                
-                if fixed_seg_path:
-                    try :
-                        MaskedImage(fixed_image_path, fixed_seg_path, folder_output, suffix, seg_label)
-                        logger.info(f"Mask apply for the file {fixed_image_path} succedeed.")
-                    except KeyError as e:
-                        logger.error(f"Mask apply for the file {fixed_image_path}failed.")
-                        logger.error(e)
-                        continue
-                else:
-                    logger.warning(f"Segmentation file for {fixed_image_path} not found.")
+            if not file.endswith(('.nii', '.nii.gz')):
+                continue
+            if not ('_CBCT' in file or '_MR' in file):
+                logger.warning(
+                    f"Skipping {os.path.join(root, file)}: filename does not contain "
+                    "'_CBCT' or '_MR', so it was not recognized as a CBCT/MRI scan.")
+                continue
+
+            fixed_image_path = os.path.join(root, file)
+            fixed_seg_path = find_segmentation_file(file, seg_folder)
+
+            if fixed_seg_path:
+                try :
+                    MaskedImage(fixed_image_path, fixed_seg_path, folder_output, suffix, seg_label)
+                    logger.info(f"Mask apply for the file {fixed_image_path} succedeed.")
+                except KeyError as e:
+                    logger.error(f"Mask apply for the file {fixed_image_path}failed.")
+                    logger.error(e)
+                    continue
+            else:
+                logger.warning(f"Segmentation file for {fixed_image_path} not found.")
 
 
 

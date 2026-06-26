@@ -1,25 +1,19 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME MRI2CBCT)
-set(FOLDER_LIBRARY MRI2CBCT_utils)
+set(MODULE_NAME GreedyReg)
 
 #-----------------------------------------------------------------------------
-set(MODULE_PYTHON_SCRIPTS
-  ${MODULE_NAME}.py
-  ${FOLDER_LIBRARY}/Approx_MRI2CBCT.py
-  ${FOLDER_LIBRARY}/ManualApprox_MRI2CBCT.py
-  ${FOLDER_LIBRARY}/Method.py
-  ${FOLDER_LIBRARY}/Preprocess_CBCT_MRI.py
-  ${FOLDER_LIBRARY}/Preprocess_MRI.py
-  ${FOLDER_LIBRARY}/Reg_MRI2CBCT.py
-  ${FOLDER_LIBRARY}/LR_crop.py
-  ${FOLDER_LIBRARY}/TMJ_crop.py
-  ${FOLDER_LIBRARY}/utils_CBCT.py
-  )
+
+set(FOLDER_LIBRARY GreedyReg_Method)
 
 set(MODULE_PYTHON_RESOURCES
   Resources/Icons/${MODULE_NAME}.png
-  Resources/UI/${MODULE_NAME}.ui
   )
+
+set(MODULE_PYTHON_SCRIPTS
+  ${MODULE_NAME}.py
+  ${FOLDER_LIBRARY}/__init__.py
+  ${FOLDER_LIBRARY}/Logic.py
+)
 
 #-----------------------------------------------------------------------------
 slicerMacroBuildScriptedModule(

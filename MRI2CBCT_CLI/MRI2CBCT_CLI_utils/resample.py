@@ -242,7 +242,7 @@ def resample_images(args):
     
 def run_resample(img=None, dir=None, csv=None, csv_column='image', csv_root_path=None, csv_use_spc=0,
                      csv_column_spcx=None, csv_column_spcy=None, csv_column_spcz=None, ref=None, size=None,
-                     img_spacing=None, spacing=None, origin=None, linear=False, center=0, rightSide=0,mri=0,fit_spacing=False,
+                     img_spacing=None, spacing=None, origin=None, linear=True, center=0, rightSide=0,mri=0,fit_spacing=False,
                      iso_spacing=False, image_dimension=2, pixel_dimension=1, rgb=False, ow=1, out="./out.nrrd",
                      out_ext=None):
     '''
@@ -300,7 +300,7 @@ if __name__ == "__main__":
     transform_group.add_argument('--img_spacing', nargs="+", type=float, default=None, help='Use this spacing information instead of the one in the image')
     transform_group.add_argument('--spacing', nargs="+", type=float, default=None, help='Output spacing')
     transform_group.add_argument('--origin', nargs="+", type=float, default=None, help='Output origin')
-    transform_group.add_argument('--linear', type=bool, help='Use linear interpolation.', default=False)
+    transform_group.add_argument('--linear', type=bool, help='Use linear interpolation.', default=True)
     transform_group.add_argument('--center', type=int, help='Center the image in the space', default=0)
     transform_group.add_argument('--rightSide', type=int, help='Shift the image to the right side', default=0)
     transform_group.add_argument('--mri', type=bool, help='Use MRI type pixel', default=0)

@@ -52,6 +52,8 @@ add_subdirectory(CNE_CLI)
 add_subdirectory(Medical_Data_Anonymizer_Module)
 add_subdirectory(VFACE)
 add_subdirectory(VFACE_CLI)
+add_subdirectory(GreedyReg)
+add_subdirectory(GreedyReg_CLI)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------

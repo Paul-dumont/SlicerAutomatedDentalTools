@@ -96,10 +96,17 @@ def MatrixRetrieval(TransformParameterMapObject):
     return transform
 
 def get_corresponding_file(folder, patient_id, modality):
-    """Get the corresponding file for a given patient ID and modality."""
+    """Get the corresponding file for a given patient ID and modality
+    (e.g. "CBCT", "MR", "MRI" - no underscores). Matches both
+    "<patient_id>_<modality>.nii.gz" and "<patient_id>_<modality>_anything.nii.gz",
+    so files without a trailing underscore (e.g. "B010_CBCT.nii.gz") are found too."""
+    prefix = f"{patient_id}_{modality}"
     for root, _, files in os.walk(folder):
         for file in files:
-            if file.startswith(patient_id) and modality in file and file.endswith(".nii.gz"):
+            if not (file.startswith(prefix) and file.endswith(".nii.gz")):
+                continue
+            rest = file[len(prefix):]
+            if rest == ".nii.gz" or rest.startswith("_"):
                 return os.path.join(root, file)
     return None
 
@@ -121,53 +128,55 @@ def registration(cbct_folder,mri_folder,cbct_mask_folder,output_folder,mri_origi
     - Call process_images to perform registration and save the results.
     """
 
-    cbct_files = [f for f in os.listdir(cbct_folder) if f.endswith(".nii.gz") and "_CBCT_" in f]
+    cbct_files = [f for f in os.listdir(cbct_folder) if f.endswith(".nii.gz") and "_CBCT" in f]
     if not cbct_files:
 
-        raise ValueError(f"No valid CBCT files found in {cbct_folder}. Files must end in .nii.gz and contain '_CBCT_'")
-        
-    for cbct_file in os.listdir(cbct_folder):
-        if cbct_file.endswith(".nii.gz") and "_CBCT_" in cbct_file:
-            patient_id = cbct_file.split("_CBCT_")[0]
-    
-            mri_path = get_corresponding_file(mri_folder, patient_id, "_MR_")
-            if mri_path is None:
-                mri_path = get_corresponding_file(mri_folder, patient_id, "_MRI_")
-            if mri_path is None:
-                logger.error("=" * 62)
-                logger.error("ERROR: Could not find MRI file for patient:", patient_id)
-                logger.error("Files must be named following this convention:")
-                logger.error("  CBCT: PATIENTID_CBCT_anything.nii.gz")
-                logger.error("  MRI:  PATIENTID_MR_anything.nii.gz  or  PATIENTID_MRI_anything.nii.gz")
-                logger.error("  MASK: PATIENTID_CBCT_anything.nii.gz")
-                logger.error("=" * 62)
-                raise ValueError(f"No MRI file found for patient {patient_id} in {mri_folder}")
-                
-            cbct_mask_path = get_corresponding_file(cbct_mask_folder, patient_id, "_CBCT_")
-            if cbct_mask_path is None:
-                logger.error("=" * 62)
-                logger.error("ERROR: Could not find mask file for patient:", patient_id)
-                logger.error("Files must be named following this convention:")
-                logger.error("  CBCT: PATIENTID_CBCT_anything.nii.gz")
-                logger.error("  MRI:  PATIENTID_MR_anything.nii.gz  or  PATIENTID_MRI_anything.nii.gz")
-                logger.error("  MASK: PATIENTID_CBCT_anything.nii.gz")
-                logger.error("=" * 62)
-                raise ValueError(f"No mask file found for patient {patient_id} in {cbct_mask_folder}")
+        raise ValueError(f"No valid CBCT files found in {cbct_folder}. Files must end in .nii.gz and contain '_CBCT'")
 
-            if mri_original_folder != "None":
-                mri_path_original = get_corresponding_file(mri_original_folder, patient_id, "_MR_")
-                if mri_path_original is None:
-                    mri_path_original = get_corresponding_file(mri_original_folder, patient_id, "_MRI_")
-                if mri_path_original is None:
-                    logger.error("=" * 62)
-                    logger.error("ERROR: Could not find original MRI file for patient:", patient_id)
-                    logger.error("Files must be named following this convention:")
-                    logger.error("  CBCT: PATIENTID_CBCT_anything.nii.gz")
-                    logger.error("  MRI:  PATIENTID_MR_anything.nii.gz  or  PATIENTID_MRI_anything.nii.gz")
-                    logger.error("  MASK: PATIENTID_CBCT_anything.nii.gz")
-                    logger.error("=" * 62)
-                    raise ValueError(f"No original MRI file found for patient {patient_id} in {mri_original_folder}")
-            
+    for cbct_file in cbct_files:
+        patient_id = cbct_file.split("_CBCT")[0]
+
+        mri_path = get_corresponding_file(mri_folder, patient_id, "MR")
+        if mri_path is None:
+            mri_path = get_corresponding_file(mri_folder, patient_id, "MRI")
+        if mri_path is None:
+            logger.error("=" * 62)
+            logger.error(f"ERROR: Could not find MRI file for patient: {patient_id}")
+            logger.error("Files must be named following this convention:")
+            logger.error("  CBCT: PATIENTID_CBCT_anything.nii.gz  or  PATIENTID_CBCT.nii.gz")
+            logger.error("  MRI:  PATIENTID_MR_anything.nii.gz  or  PATIENTID_MRI_anything.nii.gz")
+            logger.error("  MASK: PATIENTID_CBCT_anything.nii.gz")
+            logger.error("=" * 62)
+            raise ValueError(f"No MRI file found for patient {patient_id} in {mri_folder}")
+
+        cbct_mask_path = get_corresponding_file(cbct_mask_folder, patient_id, "CBCT")
+        if cbct_mask_path is None:
+            logger.error("=" * 62)
+            logger.error(f"ERROR: Could not find mask file for patient: {patient_id}")
+            logger.error("Files must be named following this convention:")
+            logger.error("  CBCT: PATIENTID_CBCT_anything.nii.gz  or  PATIENTID_CBCT.nii.gz")
+            logger.error("  MRI:  PATIENTID_MR_anything.nii.gz  or  PATIENTID_MRI_anything.nii.gz")
+            logger.error("  MASK: PATIENTID_CBCT_anything.nii.gz")
+            logger.error("=" * 62)
+            raise ValueError(f"No mask file found for patient {patient_id} in {cbct_mask_folder}")
+
+        mri_path_original = mri_path
+        if mri_original_folder != "None":
+            mri_path_original = get_corresponding_file(mri_original_folder, patient_id, "MR")
+            if mri_path_original is None:
+                mri_path_original = get_corresponding_file(mri_original_folder, patient_id, "MRI")
+            if mri_path_original is None:
+                logger.error("=" * 62)
+                logger.error(f"ERROR: Could not find original MRI file for patient: {patient_id}")
+                logger.error("Files must be named following this convention:")
+                logger.error("  CBCT: PATIENTID_CBCT_anything.nii.gz  or  PATIENTID_CBCT.nii.gz")
+                logger.error("  MRI:  PATIENTID_MR_anything.nii.gz  or  PATIENTID_MRI_anything.nii.gz")
+                logger.error("  MASK: PATIENTID_CBCT_anything.nii.gz")
+                logger.error("=" * 62)
+                raise ValueError(f"No original MRI file found for patient {patient_id} in {mri_original_folder}")
+
+        process_images(mri_path, cbct_mask_path, output_folder, patient_id, mri_path_original)
+
 def process_images(mri_path, cbct_mask_path, output_folder, patient_id, mri_path_original):
     """
     Processes MRI and CBCT mask images, performs registration, and saves the results.

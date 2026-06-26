@@ -7,6 +7,7 @@ from MRI2CBCT_utils.Preprocess_MRI import Process_MRI
 from MRI2CBCT_utils.Preprocess_CBCT_MRI import Preprocess_CBCT_MRI
 from MRI2CBCT_utils.Reg_MRI2CBCT import Registration_MRI2CBCT
 from MRI2CBCT_utils.Approx_MRI2CBCT import Approximation_MRI2CBCT
+from MRI2CBCT_utils.ManualApprox_MRI2CBCT import ManualApproximation_MRI2CBCT
 from MRI2CBCT_utils.LR_crop import LR_CROP_MRI2CBCT
 from MRI2CBCT_utils.TMJ_crop import TMJ_CROP_MRI2CBCT
 
@@ -50,6 +51,17 @@ console_handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(name)s - %(levelname)s - (%(filename)s:%(lineno)d) - %(message)s')
 console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
+
+def pathFromVolumeNode(node):
+    """Returns the on-disk file path a volume node was loaded from, or None
+    if it has none (e.g. created in-session and never saved) - same idea as
+    AMASSS's PathFromNode helper for its single-file input mode."""
+    if node is None:
+        return None
+    storageNode = node.GetStorageNode()
+    if storageNode is None:
+        return None
+    return storageNode.GetFullNameFromFileName()
 
 def check_lib_installed(lib_name, required_version=None):
     try:
@@ -295,6 +307,7 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.preprocess_mri_cbct = Preprocess_CBCT_MRI(self)
         self.registration_mri2cbct = Registration_MRI2CBCT(self)
         self.approximate_mri2cbct = Approximation_MRI2CBCT(self)
+        self.manual_approx_mri2cbct = ManualApproximation_MRI2CBCT(self)
         self.lr_crop_mri2cbct = LR_CROP_MRI2CBCT(self)
         self.tmj_crop_mri2cbct = TMJ_CROP_MRI2CBCT(self)
 
@@ -318,7 +331,9 @@ class MRI2CBCTWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.SearchButtonApproxMRI.connect("clicked(bool)",partial(self.openFinder,"InputMRIApprox"))
         self.ui.SearchButtonOutputApprox.connect("clicked(bool)",partial(self.openFinder,"OutputApprox"))
         self.ui.pushButtonApproximateMRI.connect("clicked(bool)", self.approximateMRI)
-        
+        self._setupApproxSceneInputs()
+        self.manual_approx_mri2cbct.injectUI(self.ui.approxCollapsibleButton)
+
         
         
         ### L/R Cropping ###
@@ -1944,7 +1959,56 @@ QSlider::handle:horizontal:hover {
         )
 
         del self.list_Processes_Parameters[0]
-        
+
+    def _setupApproxSceneInputs(self) -> None:
+        """
+        Adds the option to pick the CBCT/MRI inputs for Approximate directly
+        from volumes already loaded in the scene, instead of always pointing
+        at a folder on disk - mirrors the Folder/File input-type toggle AMASSS
+        already uses for its own scan input (input_type_select +
+        MRMLNodeComboBox_file).
+        """
+        gridLayout = self.ui.gridLayout_4
+
+        self.labelApproxInputType = qt.QLabel("Input type:")
+        gridLayout.addWidget(self.labelApproxInputType, 3, 0)
+        self.comboBoxApproxInputType = qt.QComboBox()
+        self.comboBoxApproxInputType.addItems(["Folder", "Scene Volume"])
+        gridLayout.addWidget(self.comboBoxApproxInputType, 3, 1)
+
+        self.approxSceneCBCTSelector = slicer.qMRMLNodeComboBox()
+        self.approxSceneCBCTSelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
+        self.approxSceneCBCTSelector.setMRMLScene(slicer.mrmlScene)
+        self.approxSceneCBCTSelector.noneEnabled = True
+        self.approxSceneCBCTSelector.addEnabled = False
+        self.approxSceneCBCTSelector.removeEnabled = False
+        self.approxSceneCBCTSelector.setToolTip("CBCT volume already loaded in the scene")
+        gridLayout.addWidget(self.approxSceneCBCTSelector, 0, 1, 1, 3)
+
+        self.approxSceneMRISelector = slicer.qMRMLNodeComboBox()
+        self.approxSceneMRISelector.nodeTypes = ["vtkMRMLScalarVolumeNode"]
+        self.approxSceneMRISelector.setMRMLScene(slicer.mrmlScene)
+        self.approxSceneMRISelector.noneEnabled = True
+        self.approxSceneMRISelector.addEnabled = False
+        self.approxSceneMRISelector.removeEnabled = False
+        self.approxSceneMRISelector.setToolTip("MRI volume already loaded in the scene")
+        gridLayout.addWidget(self.approxSceneMRISelector, 1, 1, 1, 3)
+
+        def onInputTypeChanged(index):
+            useScene = (index == 1)
+            self.ui.label_17.setText("CBCT volume:" if useScene else "Input CBCT folder:")
+            self.ui.lineEditApproxCBCT.setVisible(not useScene)
+            self.ui.SearchButtonApproxCBCT.setVisible(not useScene)
+            self.approxSceneCBCTSelector.setVisible(useScene)
+
+            self.ui.label_16.setText("MRI volume:" if useScene else "Input MRI folder:")
+            self.ui.lineEditApproxMRI.setVisible(not useScene)
+            self.ui.SearchButtonApproxMRI.setVisible(not useScene)
+            self.approxSceneMRISelector.setVisible(useScene)
+
+        self.comboBoxApproxInputType.currentIndexChanged.connect(onInputTypeChanged)
+        onInputTypeChanged(0)
+
     def approximateMRI(self) -> None:
         """
         Approximates MRI images to CBCT images using specified parameters and initiate the processing pipeline.
@@ -1955,12 +2019,41 @@ QSlider::handle:horizontal:hover {
         for normalization parameters and validates input folders for the presence of necessary files.
         """
         install_function()
-        
-        param = {"cbct_folder": self.ui.lineEditApproxCBCT.text,
-            "mri_folder": self.ui.lineEditApproxMRI.text,
-            "output_folder" : self.ui.lineEditOutputApprox.text}
-        
-        ok,mess = self.approximate_mri2cbct.TestProcess(**param) 
+
+        model_folder, model_ok = self.install_nnunet()
+        if not model_ok:
+            self.showMessage("Failed to download the condyle segmentation model required for Approximate.")
+            return
+
+        useSceneVolumes = self.comboBoxApproxInputType.currentIndex == 1
+        cbctFolder = self.ui.lineEditApproxCBCT.text
+        mriFolder = self.ui.lineEditApproxMRI.text
+
+        if useSceneVolumes:
+            cbctNode = self.approxSceneCBCTSelector.currentNode()
+            mriNode = self.approxSceneMRISelector.currentNode()
+            if not cbctNode or not mriNode:
+                self.showMessage("Please select a CBCT and an MRI volume from the scene.")
+                return
+
+            # Volumes already loaded from a file already have that file's path
+            # on their storage node, same as AMASSS's single-file input mode -
+            # no need to export/copy anything.
+            cbctFolder = pathFromVolumeNode(cbctNode)
+            mriFolder = pathFromVolumeNode(mriNode)
+            if not cbctFolder or not mriFolder:
+                self.showMessage(
+                    "The selected volume(s) don't have a file on disk yet. "
+                    "Save them first, or switch Input type to Folder.")
+                return
+
+        param = {"cbct_folder": cbctFolder,
+            "mri_folder": mriFolder,
+            "output_folder" : self.ui.lineEditOutputApprox.text,
+            "model_folder": str(model_folder),
+            "use_scene_volumes": useSceneVolumes}
+
+        ok,mess = self.approximate_mri2cbct.TestProcess(**param)
         if not ok : 
             self.showMessage(mess)
             return
@@ -2081,6 +2174,10 @@ QSlider::handle:horizontal:hover {
                 logger.info("\n\n ========= PROCESSED ========= \n")
 
                 logger.info(self.process.GetOutputText())
+
+                if self.module_name == "MRI2CBCT approximation":
+                    self.approximate_mri2cbct.finalizeApproximation()
+
                 try:
                     logger.info(f"name process : {self.list_Processes_Parameters[0]["Process"]}")
                     self.process = slicer.cli.run(
